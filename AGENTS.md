@@ -6,9 +6,9 @@ Use the account's noreply address: 204031946+SnoW-099@users.noreply.github.com.
 Apply this identity to this repository only, never global Git settings.
 
 The user requests committing and uploading each medium or large change after
-appropriate checks. Preserve remote history and concurrent changes. Use a
-feature branch and pull request unless the user requests a different branch;
-never force-push or merge without authorization.
+appropriate checks. Work directly on main and push commits to main, as
+requested by the user. Preserve remote history and concurrent changes;
+never force-push or merge other branches without authorization.
 
 Keep secrets, real .env files, dependency installations, build output and
 scanner caches out of source control. Keep exact dependency/action/tool/image
