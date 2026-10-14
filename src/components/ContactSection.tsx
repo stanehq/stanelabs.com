@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState, useSyncExternalStore, type FormEvent } from 'react';
+import { useEffect, useRef, useState, useSyncExternalStore, type FormEvent, type ReactNode } from 'react';
 import config from '../../project-config.json';
 import { Icon } from './Icon';
 import { Button } from './ui/button';
@@ -20,7 +20,7 @@ function prepareDraft(values: FormData, topic: string) {
   return `mailto:${config.contactEmail}?subject=${encodeURIComponent(`Stane — ${topic}`)}&body=${encodeURIComponent(body)}`;
 }
 
-export default function ContactSection() {
+export default function ContactSection({ children }: { children?: ReactNode }) {
   const sectionRef = useRef<HTMLElement>(null);
   const hydrated = useSyncExternalStore(subscribeHydration, clientSnapshot, serverSnapshot);
   const [topic, setTopic] = useState<Topic>('Consulta inicial');
@@ -108,20 +108,16 @@ export default function ContactSection() {
   return <section ref={sectionRef} id="contacto" className="contact-section" aria-labelledby="contact-heading">
     <div className="container contact-layout">
       <div className="contact-intro">
-        <p className="section-label">PRIMER CONTACTO</p>
-        <h2 id="contact-heading">Hablemos de<br /><span>tu contexto.</span></h2>
-        <p className="contact-lead">Cuéntanos qué te preocupa y qué quieres proteger. No necesitas tener un diagnóstico: unas líneas bastan para empezar.</p>
+        <p className="section-label">CONTACTO</p>
+        <h2 id="contact-heading">Hablemos <span>de seguridad.</span></h2>
+        <p className="contact-lead">Cuéntanos qué quieres proteger o aclarar. Una descripción general es suficiente para empezar.</p>
         <a className="contact-email" href={`mailto:${config.contactEmail}`}>
-          <span className="contact-email-label">También puedes escribir directamente</span>
+          <span className="contact-email-label">O escríbenos directamente</span>
           <span>{config.contactEmail}<Icon name="arrow-up-right" size={20} /></span>
         </a>
-        <ul className="contact-guidance">
-          <li><span>01</span><div><h3>Tu situación y tu objetivo</h3><p>Qué necesitas entender o mejorar. Comparte solo información general.</p></div></li>
-          <li><span>02</span><div><h3>Un siguiente paso claro</h3><p>El alcance y el canal para los detalles sensibles se acuerdan antes de continuar.</p></div></li>
-        </ul>
       </div>
       <div className="contact-panel">
-        <div className="contact-panel-heading"><h3>Cuéntanos qué necesitas</h3><p>Una descripción general nos ayuda a entender por dónde empezar.</p></div>
+        <div className="contact-panel-heading"><h3>Tu consulta</h3></div>
         <form className="contact-form" onSubmit={submit} method="post" aria-describedby="contact-delivery-note">
           <fieldset className="contact-fieldset" disabled={!hydrated || pending}>
             <input name="website" type="text" tabIndex={-1} autoComplete="off" aria-hidden="true" className="honeypot" />
@@ -130,7 +126,7 @@ export default function ContactSection() {
               <label className="field"><span className="field-label">Correo de contacto</span><Input name="email" type="email" placeholder="tu@correo.com" autoComplete="email" required maxLength={180} /></label>
             </div>
             <label className="field"><span className="field-label">¿Sobre qué quieres consultar?</span><select name="topic" value={topic} onChange={event => setTopic(event.target.value as Topic)} className="native-select">{topics.map(value => <option key={value}>{value}</option>)}</select></label>
-            <label className="field"><span className="field-label">Un poco de contexto</span><Textarea name="message" placeholder="Qué te preocupa y qué te gustaría aclarar. Comparte solo información general." required maxLength={2000} rows={5} /></label>
+            <label className="field"><span className="field-label">Un poco de contexto</span><Textarea name="message" placeholder="Qué te preocupa y qué te gustaría aclarar. No incluyas contraseñas, claves ni datos de terceros." required maxLength={2000} rows={4} /></label>
             <p id="contact-delivery-note" className="form-note"><Icon name="lock" size={16} />{mode === 'direct' ? 'La consulta se enviará a Stane por correo. Comparte solo información general.' : checking ? 'Comprobando el canal de contacto. Puedes ir preparando tu consulta.' : 'El formulario prepara un borrador en tu aplicación de correo. Revísalo y envíalo allí; no se envía automáticamente.'}</p>
             <div className="contact-submit-row"><Button type="submit" className="form-action" disabled={checking || pending}>{pending ? 'Enviando…' : checking ? 'Comprobando canal…' : mode === 'direct' ? 'Enviar consulta' : 'Preparar consulta'}<Icon name="arrow-up-right" size={20} /></Button></div>
           </fieldset>
@@ -140,6 +136,7 @@ export default function ContactSection() {
           <noscript><p className="contact-noscript">Para contactar sin JavaScript, escribe a <a href={`mailto:${config.contactEmail}`}>{config.contactEmail}</a> desde tu aplicación de correo. Comparte solo información general.</p></noscript>
         </form>
       </div>
+      {children}
     </div>
   </section>;
 }
