@@ -88,7 +88,7 @@ for (const size of [192, 512]) {
   if (await exists(path.join(root, 'public', filename))) icons.push({ src: `/${filename}`, sizes: `${size}x${size}`, type: 'image/png', purpose: 'any' });
 }
 if (!icons.length && await exists(path.join(root, 'public', 'brand', 'favicon.svg'))) icons.push({ src: '/brand/favicon.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'any' });
-const manifest = { id: '/', name, short_name: name, description: definitions['/'].description, lang: 'es', start_url: '/', scope: '/', display: 'standalone', background_color: '#FFFFFF', theme_color: '#2597D0', icons };
+const manifest = { id: '/', name, short_name: name, description: definitions['/'].description, lang: 'es', start_url: '/', scope: '/', display: 'standalone', background_color: '#FFFFFF', theme_color: '#3c7bdb', icons };
 const contacts = email ? [`Contact: mailto:${email}`, `Contact: ${origin}/security`] : [`Contact: ${origin}/security`];
 const securityTxt = [`# ${name} — responsible vulnerability disclosure`, ...contacts, `Expires: ${expiry}`, `Preferred-Languages: es`, `Canonical: ${origin}/.well-known/security.txt`, `Policy: ${origin}/security`, ''].join('\n');
 const sitemap = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${[...new Set(routes)].sort().map((route) => `  <url><loc>${escapeXml(`${origin}${route}${route === '/' ? '' : '/'}`)}</loc></url>`).join('\n')}\n</urlset>\n`;
