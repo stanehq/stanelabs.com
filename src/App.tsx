@@ -1,8 +1,9 @@
 'use client';
-import { useState, lazy, Suspense } from 'react';
+import { useEffect, useRef, useState, lazy, Suspense } from 'react';
 import { Icon } from './components/Icon';
 import ContactSection from './components/ContactSection';
 import { Button } from './components/ui/button';
+import config from '../project-config.json';
 import { pageContent } from './lib/legal-content';
 const LiquidField = lazy(() => import('./components/LiquidField'));
 
@@ -36,11 +37,53 @@ function Brand() {
 }
 function Header({ home }: { home: boolean }) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [contactOpen, setContactOpen] = useState(false);
+  const headerRef = useRef<HTMLElement>(null);
+  const contactButtonRef = useRef<HTMLButtonElement>(null);
+  const closeContact = () => {
+    setContactOpen(false);
+    contactButtonRef.current?.focus({ preventScroll: true });
+  };
+  useEffect(() => {
+    const open = () => { setContactOpen(true); setMenuOpen(false); };
+    const followContactLink = (event: MouseEvent) => {
+      if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+      if (event.target instanceof Element && event.target.closest('a[href="#contacto"], a[href="/#contacto"]')) {
+        event.preventDefault();
+        open();
+      }
+    };
+    const outside = (event: PointerEvent) => {
+      if (event.target instanceof Node && !headerRef.current?.contains(event.target)) setContactOpen(false);
+    };
+    const escape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && contactOpen) {
+        setContactOpen(false);
+        contactButtonRef.current?.focus({ preventScroll: true });
+      }
+    };
+    document.addEventListener('click', followContactLink);
+    document.addEventListener('pointerdown', outside);
+    document.addEventListener('keydown', escape);
+    window.addEventListener('stane:contact-topic', open);
+    return () => {
+      document.removeEventListener('click', followContactLink);
+      document.removeEventListener('pointerdown', outside);
+      document.removeEventListener('keydown', escape);
+      window.removeEventListener('stane:contact-topic', open);
+    };
+  }, [contactOpen]);
+  useEffect(() => {
+    const followHash = () => { if (window.location.hash === '#contacto') setContactOpen(true); };
+    const initial = window.setTimeout(followHash, 0);
+    window.addEventListener('hashchange', followHash);
+    return () => { window.clearTimeout(initial); window.removeEventListener('hashchange', followHash); };
+  }, []);
   const links = [['servicios', 'Especialidades'], ['enfoque', 'Cómo trabajamos'], ['contacto', 'Contacto']];
-  return <header className="site-header"><div className="header-inner"><Brand /><nav className="desktop-nav" aria-label="Navegación principal">{links.map(([id, label]) => <a key={id} href={`${home ? '' : '/'}#${id}`} className="nav-link">{label}</a>)}</nav><div className="header-end"><Button asChild size="sm" className="header-contact"><a href={`${home ? '' : '/'}#contacto`}>Consultar<Icon name="arrow-up-right" size={16} /></a></Button><Button className="menu-button" size="icon" aria-expanded={menuOpen} aria-controls="mobile-menu" aria-label={menuOpen ? 'Cerrar menú' : 'Abrir menú'} onClick={() => setMenuOpen(!menuOpen)}><Icon name={menuOpen ? 'x' : 'menu'} /></Button></div></div>{menuOpen && <nav id="mobile-menu" className="mobile-menu" aria-label="Navegación móvil">{links.map(([id, label]) => <a key={id} className="mobile-nav-link" href={`${home ? '' : '/'}#${id}`} onClick={() => setMenuOpen(false)}>{label}<Icon name="arrow-up-right" /></a>)}<a className="mobile-nav-link" href="/security" onClick={() => setMenuOpen(false)}>Seguridad<Icon name="arrow-up-right" /></a></nav>}</header>;
+  return <header ref={headerRef} className="site-header"><div className="header-inner"><Brand /><nav className="desktop-nav" aria-label="Navegación principal">{links.map(([id, label]) => <a key={id} href={`${home ? '' : '/'}#${id}`} className="nav-link">{label}</a>)}</nav><div className="header-end"><Button ref={contactButtonRef} type="button" size="sm" className="header-contact" aria-expanded={contactOpen} aria-controls="contacto" onClick={() => { setContactOpen(value => !value); setMenuOpen(false); }}>Contactarnos<Icon name={contactOpen ? 'x' : 'plus'} size={16} /></Button><Button className="menu-button" size="icon" aria-expanded={menuOpen} aria-controls="mobile-menu" aria-label={menuOpen ? 'Cerrar menú' : 'Abrir menú'} onClick={() => { setMenuOpen(!menuOpen); setContactOpen(false); }}><Icon name={menuOpen ? 'x' : 'menu'} /></Button></div></div>{menuOpen && <nav id="mobile-menu" className="mobile-menu" aria-label="Navegación móvil">{links.map(([id, label]) => <a key={id} className="mobile-nav-link" href={`${home ? '' : '/'}#${id}`} onClick={() => setMenuOpen(false)}>{label}<Icon name="arrow-up-right" /></a>)}<a className="mobile-nav-link" href="/security" onClick={() => setMenuOpen(false)}>Seguridad<Icon name="arrow-up-right" /></a></nav>}<ContactSection expanded={contactOpen} onClose={closeContact} /></header>;
 }
 function Hero() {
-  return <section className="hero-shell" aria-labelledby="hero-heading"><div className="container hero"><div className="hero-copy"><p className="eyebrow"><span className="eyebrow-dot" />ESTUDIO DE CIBERSEGURIDAD Y OPSEC</p><h1 id="hero-heading" className="hero-title"><span>Tus datos.</span><span>Tu identidad.</span><span className="hero-title-accent">Tu control.</span></h1><p className="hero-description">Entiende tu exposición.<br />Protege lo que importa, con criterio.</p><div className="hero-actions"><Button type="button" aria-controls="contact-form-panel" onClick={() => window.dispatchEvent(new Event('stane:contact-open'))}>Hacer una consulta<Icon name="arrow-down" /></Button><a className="text-link" href="#servicios">Explorar especialidades<Icon name="arrow-down" size={16} /></a></div></div><div className="hero-art" aria-hidden="true"><Suspense fallback={<div className="sculpture-fallback is-loading"><span /><span /><span /></div>}><LiquidField /></Suspense></div></div></section>;
+  return <section className="hero-shell" aria-labelledby="hero-heading"><div className="container hero"><div className="hero-copy"><p className="eyebrow"><span className="eyebrow-dot" />ESTUDIO DE CIBERSEGURIDAD Y OPSEC</p><h1 id="hero-heading" className="hero-title"><span>Tus datos.</span><span>Tu identidad.</span><span className="hero-title-accent">Tu control.</span></h1><p className="hero-description">Entiende tu exposición.<br />Protege lo que importa, con criterio.</p><div className="hero-actions"><a className="text-link" href="#servicios">Explorar especialidades<Icon name="arrow-down" size={16} /></a></div></div><div className="hero-art" aria-hidden="true"><Suspense fallback={<div className="sculpture-fallback is-loading"><span /><span /><span /></div>}><LiquidField /></Suspense></div></div></section>;
 }
 function Home() {
   return <><Hero />
@@ -57,7 +100,7 @@ function Home() {
       </article>)}</div>
       <div id="enfoque" className="approach-panel" aria-labelledby="approach-heading"><span id="panel-enfoque" className="legacy-anchor" aria-hidden="true" /><span id="entregables" className="legacy-anchor" aria-hidden="true" /><span id="panel-entregables" className="legacy-anchor" aria-hidden="true" /><div className="approach-heading"><p className="section-label">CÓMO TRABAJAMOS · QUÉ RECIBES</p><h2 id="approach-heading">De tu contexto a un plan.</h2></div><ol className="workflow-list">{workflow.map(([title, text], index) => <li key={title}><span className="step-number">0{index + 1}</span><div><h3>{title}</h3><p>{text}</p></div></li>)}</ol></div>
     </section>
-    <ContactSection><div id="preguntas" className="contact-questions" aria-labelledby="questions-heading"><span id="panel-preguntas" className="legacy-anchor" aria-hidden="true" /><h3 id="questions-heading" className="questions-title">Antes de escribirnos</h3><div className="faq-list">{questions.map(([question, answer]) => <article key={question} className="faq-entry"><h3>{question}</h3><p>{answer}</p>{question.includes('vulnerabilidad') && <a className="text-link" href="/security">Política de seguridad<Icon name="arrow-up-right" size={16} /></a>}</article>)}</div></div></ContactSection>
+    <section className="contact-section"><div className="container contact-layout"><div className="contact-intro"><p className="section-label">CONTACTO</p><h2>Tu consulta, <span>el primer paso.</span></h2><p className="contact-lead">Cuéntanos qué quieres proteger o aclarar. Una descripción general es suficiente para empezar.</p><a className="contact-email" href={`mailto:${config.contactEmail}`}><span className="contact-email-label">Escríbenos directamente</span><span>{config.contactEmail}<Icon name="arrow-up-right" size={20} /></span></a></div><div id="preguntas" className="contact-questions" aria-labelledby="questions-heading"><span id="panel-preguntas" className="legacy-anchor" aria-hidden="true" /><h3 id="questions-heading" className="questions-title">Antes de escribirnos</h3><div className="faq-list">{questions.map(([question, answer]) => <article key={question} className="faq-entry"><h3>{question}</h3><p>{answer}</p>{question.includes('vulnerabilidad') && <a className="text-link" href="/security">Política de seguridad<Icon name="arrow-up-right" size={16} /></a>}</article>)}</div></div></div></section>
   </>;
 }
 function LegalPage({ path }: {path: string}) {

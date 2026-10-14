@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState, useSyncExternalStore, type FormEvent, type ReactNode } from 'react';
+import { useEffect, useRef, useState, useSyncExternalStore, type FormEvent } from 'react';
 import config from '../../project-config.json';
 import { Icon } from './Icon';
 import { Button } from './ui/button';
@@ -20,10 +20,9 @@ function prepareDraft(values: FormData, topic: string) {
   return `mailto:${config.contactEmail}?subject=${encodeURIComponent(`Stane — ${topic}`)}&body=${encodeURIComponent(body)}`;
 }
 
-export default function ContactSection({ children }: { children?: ReactNode }) {
-  const sectionRef = useRef<HTMLElement>(null);
+export default function ContactSection({ expanded, onClose }: { expanded: boolean; onClose: () => void }) {
+  const sectionRef = useRef<HTMLDivElement>(null);
   const panelHeadingRef = useRef<HTMLHeadingElement>(null);
-  const [expanded, setExpanded] = useState(false);
   const hydrated = useSyncExternalStore(subscribeHydration, clientSnapshot, serverSnapshot);
   const [topic, setTopic] = useState<Topic>('Consulta inicial');
   const [mode, setMode] = useState<DeliveryMode>(contactApiUrl ? 'waiting' : 'draft');
@@ -31,41 +30,20 @@ export default function ContactSection({ children }: { children?: ReactNode }) {
   const [notice, setNotice] = useState('');
   const [draft, setDraft] = useState('');
 
-  const openForm = useCallback(() => {
-    setExpanded(true);
-    window.requestAnimationFrame(() => {
-      panelHeadingRef.current?.focus({ preventScroll: true });
-      panelHeadingRef.current?.scrollIntoView({ block: 'start', behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' });
-    });
+  useEffect(() => {
+    const selectTopic = (event: Event) => {
+      const detail: unknown = (event as CustomEvent).detail;
+      if (typeof detail === 'string' && topics.includes(detail as Topic)) setTopic(detail as Topic);
+    };
+    window.addEventListener('stane:contact-topic', selectTopic);
+    return () => window.removeEventListener('stane:contact-topic', selectTopic);
   }, []);
 
   useEffect(() => {
-    const open = openForm;
-    const selectTopic = (event: Event) => {
-      const detail: unknown = (event as CustomEvent).detail;
-      if (typeof detail === 'string' && topics.includes(detail as Topic)) {
-        setTopic(detail as Topic);
-        open();
-      }
-    };
-    const followContactLink = (event: MouseEvent) => {
-      if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
-      if (event.target instanceof Element && event.target.closest('a[href="#contacto"]')) open();
-    };
-    const followHash = () => { if (window.location.hash === '#contacto') open(); };
-    window.addEventListener('stane:contact-open', open);
-    window.addEventListener('stane:contact-topic', selectTopic);
-    window.addEventListener('hashchange', followHash);
-    document.addEventListener('click', followContactLink);
-    const initialHash = window.setTimeout(followHash, 0);
-    return () => {
-      window.clearTimeout(initialHash);
-      window.removeEventListener('stane:contact-open', open);
-      window.removeEventListener('stane:contact-topic', selectTopic);
-      window.removeEventListener('hashchange', followHash);
-      document.removeEventListener('click', followContactLink);
-    };
-  }, [openForm]);
+    if (!expanded) return;
+    const frame = window.requestAnimationFrame(() => panelHeadingRef.current?.focus({ preventScroll: true }));
+    return () => window.cancelAnimationFrame(frame);
+  }, [expanded]);
 
   useEffect(() => {
     if (!contactApiUrl) return;
@@ -134,20 +112,10 @@ export default function ContactSection({ children }: { children?: ReactNode }) {
   }
 
   const checking = mode === 'waiting' || mode === 'checking';
-  return <section ref={sectionRef} id="contacto" className="contact-section" aria-labelledby="contact-heading">
-    <div className={`container contact-layout${expanded ? ' is-expanded' : ''}`}>
-      <div className="contact-intro">
-        <p className="section-label">CONTACTO</p>
-        <h2 id="contact-heading">Tu consulta, <span>el primer paso.</span></h2>
-        <p className="contact-lead">Cuéntanos qué quieres proteger o aclarar. Una descripción general es suficiente para empezar.</p>
-        <Button type="button" className="contact-toggle" aria-expanded={expanded} aria-controls="contact-form-panel" onClick={() => expanded ? setExpanded(false) : openForm()}>{expanded ? 'Cerrar formulario' : 'Hacer una consulta'}<Icon name={expanded ? 'x' : 'plus'} size={20} /></Button>
-        <a className="contact-email" href={`mailto:${config.contactEmail}`}>
-          <span className="contact-email-label">O escríbenos directamente</span>
-          <span>{config.contactEmail}<Icon name="arrow-up-right" size={20} /></span>
-        </a>
-      </div>
-      <div id="contact-form-panel" className="contact-panel" hidden={!expanded}>
-        <div className="contact-panel-heading"><h3 ref={panelHeadingRef} tabIndex={-1}>Tu consulta</h3></div>
+  return <div ref={sectionRef} id="contacto" className="contact-dropdown" data-open={expanded} inert={!expanded} aria-hidden={!expanded} aria-labelledby="consultation-heading" role="region">
+    <div className="contact-dropdown-clip">
+      <div className="contact-panel">
+        <div className="contact-panel-heading"><h3 id="consultation-heading" ref={panelHeadingRef} tabIndex={-1}>Tu consulta</h3><button type="button" className="contact-close" onClick={onClose} aria-label="Cerrar formulario"><Icon name="x" size={20} /></button></div>
         <form className="contact-form" onSubmit={submit} method="post" aria-describedby="contact-delivery-note">
           <fieldset className="contact-fieldset" disabled={!hydrated || pending}>
             <input name="website" type="text" tabIndex={-1} autoComplete="off" aria-hidden="true" className="honeypot" />
@@ -166,7 +134,6 @@ export default function ContactSection({ children }: { children?: ReactNode }) {
           <noscript><p className="contact-noscript">Para contactar sin JavaScript, escribe a <a href={`mailto:${config.contactEmail}`}>{config.contactEmail}</a> desde tu aplicación de correo. Comparte solo información general.</p></noscript>
         </form>
       </div>
-      {children}
     </div>
-  </section>;
+  </div>;
 }
