@@ -23,15 +23,15 @@ const definitions = {
   '/': { title: `${name} — Ciberseguridad, OPSEC y protección de datos`, description: 'Protege lo que importa. Stane diseña estrategias de ciberseguridad, seguridad operacional y protección de información sensible.' },
   '/security': { title: `Divulgación de vulnerabilidades — ${name}`, description: 'Canal de seguridad, alcance y recomendaciones para comunicar de forma responsable una vulnerabilidad a Stane.' },
   '/privacy': { title: `Privacidad — ${name}`, description: 'Información sobre el tratamiento de datos, los servicios de terceros y el ejercicio de tus derechos en Stane.' },
-  '/tos': { title: `Términos de servicio — ${name}`, description: '' },
-  '/purchase': { title: `Compras — ${name}`, description: '' },
+  '/tos': { title: `Condiciones de uso — ${name}`, description: 'Condiciones de uso del sitio informativo de StaneLabs, un proyecto en preparación sin contratación online.' },
+  '/purchase': { title: `Contratación — ${name}`, description: 'Estado de la contratación en StaneLabs: proyecto en preparación, sin compras, pagos ni pedidos online.' },
 };
 
 function metadata(route, hasSocialImage) {
   const page = definitions[route] || { title: `${name} — Ciberseguridad y OPSEC`, description: definitions['/'].description };
   const canonical = `${origin}${route === '/' ? '/' : route}`;
   const organization = { '@type': 'Organization', '@id': `${origin}/#organization`, name, url: `${origin}/` };
-  if (email) organization.contactPoint = { '@type': 'ContactPoint', contactType: 'security', email, availableLanguage: ['es', 'en'] };
+  if (email) organization.contactPoint = { '@type': 'ContactPoint', contactType: 'security', email, availableLanguage: ['es'] };
   const structuredData = {
     '@context': 'https://schema.org',
     '@graph': [organization, { '@type': 'WebSite', '@id': `${origin}/#website`, name, url: `${origin}/`, inLanguage: 'es', publisher: { '@id': `${origin}/#organization` } }],
@@ -90,7 +90,7 @@ for (const size of [192, 512]) {
 if (!icons.length && await exists(path.join(root, 'public', 'brand', 'favicon.svg'))) icons.push({ src: '/brand/favicon.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'any' });
 const manifest = { id: '/', name, short_name: name, description: definitions['/'].description, lang: 'es', start_url: '/', scope: '/', display: 'standalone', background_color: '#FFFFFF', theme_color: '#2597D0', icons };
 const contacts = email ? [`Contact: mailto:${email}`, `Contact: ${origin}/security`] : [`Contact: ${origin}/security`];
-const securityTxt = [`# ${name} — responsible vulnerability disclosure`, ...contacts, `Expires: ${expiry}`, `Preferred-Languages: es, en`, `Canonical: ${origin}/.well-known/security.txt`, `Policy: ${origin}/security`, ''].join('\n');
+const securityTxt = [`# ${name} — responsible vulnerability disclosure`, ...contacts, `Expires: ${expiry}`, `Preferred-Languages: es`, `Canonical: ${origin}/.well-known/security.txt`, `Policy: ${origin}/security`, ''].join('\n');
 const sitemap = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${[...new Set(routes)].sort().map((route) => `  <url><loc>${escapeXml(`${origin}${route}${route === '/' ? '' : '/'}`)}</loc></url>`).join('\n')}\n</urlset>\n`;
 
 await writeFile(path.join(output, 'manifest.webmanifest'), `${JSON.stringify(manifest, null, 2)}\n`, 'utf8');

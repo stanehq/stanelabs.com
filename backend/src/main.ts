@@ -19,8 +19,8 @@ async function bootstrap(): Promise<void> {
   app.use(helmet({ contentSecurityPolicy: { directives: {
     defaultSrc: ["'self'"],
     scriptSrc: ["'self'", "'unsafe-inline'"],
-    styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
-    fontSrc: ["'self'", 'https://fonts.gstatic.com'],
+    styleSrc: ["'self'", "'unsafe-inline'"],
+    fontSrc: ["'self'"],
     imgSrc: ["'self'", 'data:'],
     connectSrc: ["'self'"],
     objectSrc: ["'none'"],
@@ -33,7 +33,16 @@ async function bootstrap(): Promise<void> {
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true, forbidUnknownValues: true, transform: true, validationError: { target: false, value: false } }));
   app.useGlobalFilters(new SafeExceptionFilter());
   const webRoot = resolve(config.get<string>('WEB_ROOT') || resolve(__dirname, '../public'));
-  if (existsSync(webRoot)) app.use(serveStatic(webRoot, { index: 'index.html', dotfiles: 'allow', redirect: true, fallthrough: true }));
+  if (existsSync(webRoot)) {
+    app.use('/_next/static', serveStatic(resolve(webRoot, '_next/static'), { maxAge: '1y', immutable: true, index: false, fallthrough: false }));
+    app.use(serveStatic(webRoot, {
+      index: 'index.html', dotfiles: 'allow', redirect: true, fallthrough: true,
+      // Cloudflare respects no-transform and leaves the email readable without JS.
+      setHeaders(response, filename) {
+        if (filename.endsWith('.html')) response.setHeader('Cache-Control', 'public, max-age=0, must-revalidate, no-transform');
+      },
+    }));
+  }
   app.enableShutdownHooks();
   await app.listen(config.get<number>('PORT') || 3001, config.get<string>('HOST') || '0.0.0.0');
 }

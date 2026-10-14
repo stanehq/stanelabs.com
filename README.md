@@ -2,11 +2,11 @@
 
 Sitio de ciberseguridad, OPSEC y protección de información sensible. La dirección oficial configurada es **https://www.stanelabs.com** y el canal de seguridad es **security@stanelabs.com**.
 
-La portada utiliza una escultura WebGL azul satinada y un fondo discreto. El contenido se concentra en pestañas de especialidades, metodología, ejemplos de entregables y preguntas. Las animaciones respetan el movimiento reducido y se suspenden cuando no son visibles; no hay un control de pausa manual. Los ejemplos de entregables son ilustrativos y no representan trabajos de clientes.
+La portada utiliza una escultura WebGL azul satinada: oscila sin giro continuo, responde al ratón en toda la ventana, tiene un barrido de luz y un desplazamiento limitado al hacer scroll. Su geometría y oclusión se precalculan con `scripts/generate-geometry.mjs`; el componente se importa de forma dinámica. Renderiza como máximo a 30 fps mientras está visible, con un único fotograma estático cuando se solicita movimiento reducido. El titular y la escultura entran en un segundo; el titular nunca parte de opacidad cero. El contenido se concentra en pestañas de especialidades, metodología, ejemplos de entregables y preguntas. Las animaciones respetan el movimiento reducido y se suspenden cuando no son visibles; no hay un control de pausa manual. Los ejemplos de entregables son ilustrativos y no representan trabajos de clientes. Las FAQ usan `<details>`: sus respuestas están prerenderizadas y pueden abrirse sin JavaScript. Sin JavaScript, las pestañas se muestran como secciones completas. El sitio declara únicamente español y no muestra un falso selector de idioma.
 
 ## Arquitectura
 
-- **Frontend:** Next.js 16 y React 19, con exportación estática. Tailwind CSS 4, componentes shadcn/ui basados en Radix y Feather Icons. TikTok Sans para títulos y Geist para texto e interfaz.
+- **Frontend:** Next.js 16 y React 19, con exportación estática. Tailwind CSS 4, componentes shadcn/ui basados en Radix y 15 SVG inline derivados de Feather (licencia MIT incluida). TikTok Sans para títulos y Geist para texto e interfaz, autoalojadas con `next/font/local` y licencias OFL incluidas en `src/fonts/`. La compilación y la navegación no necesitan Google Fonts.
 - **Vista visual:** Vite utiliza los mismos componentes de `src/` para revisar el diseño; la compilación de producción del frontend usa Next.js.
 - **API:** NestJS 11 sobre Express. Sirve los archivos estáticos compilados y la API de contacto en el mismo proceso Node.js. Incluye validación, límites de solicitudes, cabeceras de seguridad y envío SMTP.
 
@@ -119,6 +119,8 @@ El VPS recibe solo la imagen compilada y su configuración; no ejecuta compilado
 
 Los datos de publicación viven en `project-config.json`: nombre, dominio oficial, correos y `sitePrivate`. `scripts/seo.mjs` prepara los archivos públicos y metadatos; su modo `--dist` adapta las páginas exportadas y genera el sitemap a partir de las rutas HTML compiladas. El sitio incluye URLs canónicas, Open Graph, Twitter y datos estructurados `Organization` y `WebSite`.
 
+StaneLabs aún no está constituido. Las páginas `/privacy`, `/security`, `/tos` y `/purchase` describen la fase informativa, el contacto y los límites del sitio; no inventan identidad fiscal ni ofrecen pagos o contratación online. La nota de privacidad no sustituye la identificación completa del responsable y los proveedores/plazos reales pendientes de concretar antes de un lanzamiento.
+
 La revisión mantiene `sitePrivate: true`: todas las páginas tienen `noindex, follow`. `robots.txt` permite el rastreo para que los buscadores puedan leer esa directiva. Esto controla la indexación; la privacidad depende del control de acceso del alojamiento.
 
 Para el lanzamiento público, conectar **stanelabs.com** con el alojamiento, comprobar HTTPS y el correo, completar los datos legales, establecer `sitePrivate: false` y volver a compilar y desplegar. Las canónicas y el sitemap apuntan al dominio oficial; el proyecto no afirma que el dominio o el buzón hayan sido verificados técnicamente.
@@ -129,10 +131,17 @@ Para el lanzamiento público, conectar **stanelabs.com** con el alojamiento, com
 - `/robots.txt`: instrucciones de rastreo y ubicación del sitemap.
 - `/sitemap.xml`: páginas disponibles en la compilación.
 - `/.well-known/security.txt`: ubicación canónica conforme al formato de RFC 9116, con correo, página de seguridad, política e idiomas.
-- `/security.txt`: copia de compatibilidad del archivo canónico.
 - `/security`: instrucciones de divulgación responsable.
-- `/privacy` y `/legal`: información del sitio. Completar y revisar los datos del titular y el tratamiento real de datos antes del lanzamiento comercial.
+- `/privacy`, `/tos` y `/purchase`: privacidad, condiciones de uso y estado de la contratación durante la preparación del proyecto. Completar los datos reales del titular, proveedores y tratamiento antes del lanzamiento comercial.
 
 `security.txt` caduca el **9 de abril de 2027**. Renovar `expiry` en `scripts/seo.mjs` y reconstruir antes de esa fecha. El sitio no añade claves PGP, asociaciones de apps ni certificaciones que no hayan sido aportadas.
 
 Referencias: [RFC 9116](https://www.rfc-editor.org/rfc/rfc9116.html), [rastreo e indexación de Google](https://developers.google.com/search/docs/crawling-indexing/robots/intro).
+
+## Cabeceras de los estáticos y Cloudflare
+
+El backend sirve `/_next/static/*` con `Cache-Control: public, max-age=31536000, immutable` y los HTML con `public, max-age=0, must-revalidate, no-transform`. `vercel.json` declara las mismas políticas para el alojamiento estático en Vercel. La CSP de ambos admite fuentes únicamente del mismo origen; Next todavía necesita scripts inline para hidratar la exportación estática.
+
+Cloudflare documenta que `Cache-Control: no-transform` impide la ofuscación del correo. Esta protección mantiene el enlace `mailto:` legible sin JavaScript cuando el proxy respeta las cabeceras del origen. No se ha cambiado ni verificado el ajuste global de la cuenta de Cloudflare. Al publicar, comprobar las cabeceras reales en el dominio y purgar HTML antiguo si procede. Referencia: https://developers.cloudflare.com/waf/tools/scrape-shield/email-address-obfuscation/.
+
+`scripts/verify.mjs` verifica contenido prerenderizado de las cinco rutas, descripciones, FAQ nativas, correo legible y que solo se declara español. `backend/test/static.test.cjs` comprueba las cabeceras HTTP con el servidor real. Lighthouse se ejecuta como medición separada, sin añadir un umbral de rendimiento a la compilación ni tratar el `noindex` deliberado como un fallo del sitio.

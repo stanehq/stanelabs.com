@@ -2,6 +2,6 @@
 Contact: mailto:security@stanelabs.com
 Contact: https://www.stanelabs.com/security
 Expires: 2027-04-09T00:00:00Z
-Preferred-Languages: es, en
+Preferred-Languages: es
 Canonical: https://www.stanelabs.com/.well-known/security.txt
 Policy: https://www.stanelabs.com/security

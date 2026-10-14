@@ -1,13 +1,12 @@
 'use client';
-import { useEffect, useState, type FormEvent, type KeyboardEvent } from 'react';
+import { useEffect, useState, lazy, Suspense, type FormEvent, type KeyboardEvent } from 'react';
 import { Icon } from './components/Icon';
-import LiquidField from './components/LiquidField';
-import Atmosphere from './components/Atmosphere';
+import { pageContent } from './lib/legal-content';
 import { Button } from './components/ui/button';
 import { Input, Textarea } from './components/ui/input';
-import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from './components/ui/accordion';
 import { Dialog, DialogTrigger, DialogContent, DialogTitle, DialogDescription } from './components/ui/dialog';
 import config from '../project-config.json';
+const LiquidField = lazy(() => import('./components/LiquidField'));
 const contactApiUrl = process.env.NEXT_PUBLIC_CONTACT_API_URL || '';
 
 const services = [
@@ -101,20 +100,11 @@ function ContactDialog({ children, service }: { children: React.ReactNode; servi
 
 function Header({ home }: { home: boolean }) {
   const [menuOpen, setMenuOpen] = useState(false);
-  const [scrolled, setScrolled] = useState(false);
-  const [active, setActive] = useState('');
-  useEffect(() => {
-    function scroll() { setScrolled(window.scrollY > 16); }
-    scroll(); window.addEventListener('scroll', scroll, { passive: true });
-    const observer = new IntersectionObserver(entries => { for (const entry of entries) if (entry.isIntersecting) setActive(entry.target.id); }, { rootMargin: '-25% 0px -55% 0px' });
-    if (home) document.querySelectorAll('main section[id]').forEach(el => observer.observe(el));
-    return () => { window.removeEventListener('scroll', scroll); observer.disconnect(); };
-  }, [home]);
   const links = [['servicios', 'Especialidades'], ['enfoque', 'Cómo trabajamos'], ['contacto', 'Contacto']];
-  return <header className={`site-header ${scrolled ? 'scrolled' : ''}`}><div className="header-inner"><Brand /><nav className="desktop-nav" aria-label="Navegación principal">{links.map(([id, label]) => <a key={id} href={`${home ? '' : '/'}#${id}`} className={`nav-link ${active === id ? 'active' : ''}`}>{label}</a>)}</nav><div className="header-end"><span className="locale" lang="es">ES</span><ContactDialog><Button size="sm" className="header-contact">Hablemos<Icon name="arrow-up-right" size={16} /></Button></ContactDialog><Button className="menu-button" size="icon" aria-expanded={menuOpen} aria-controls="mobile-menu" aria-label={menuOpen ? 'Cerrar menú' : 'Abrir menú'} onClick={() => setMenuOpen(!menuOpen)}><Icon name={menuOpen ? 'x' : 'menu'} /></Button></div></div>{menuOpen && <nav id="mobile-menu" className="mobile-menu" aria-label="Navegación móvil">{links.map(([id, label]) => <a key={id} className="mobile-nav-link" href={`${home ? '' : '/'}#${id}`} onClick={() => setMenuOpen(false)}>{label}<Icon name="arrow-up-right" /></a>)}<a className="mobile-nav-link" href="/security" onClick={() => setMenuOpen(false)}>Seguridad<Icon name="arrow-up-right" /></a></nav>}</header>;
+  return <header className="site-header"><div className="header-inner"><Brand /><nav className="desktop-nav" aria-label="Navegación principal">{links.map(([id, label]) => <a key={id} href={`${home ? '' : '/'}#${id}`} className="nav-link">{label}</a>)}</nav><div className="header-end"><ContactDialog><Button size="sm" className="header-contact">Hablemos<Icon name="arrow-up-right" size={16} /></Button></ContactDialog><Button className="menu-button" size="icon" aria-expanded={menuOpen} aria-controls="mobile-menu" aria-label={menuOpen ? 'Cerrar menú' : 'Abrir menú'} onClick={() => setMenuOpen(!menuOpen)}><Icon name={menuOpen ? 'x' : 'menu'} /></Button></div></div>{menuOpen && <nav id="mobile-menu" className="mobile-menu" aria-label="Navegación móvil">{links.map(([id, label]) => <a key={id} className="mobile-nav-link" href={`${home ? '' : '/'}#${id}`} onClick={() => setMenuOpen(false)}>{label}<Icon name="arrow-up-right" /></a>)}<a className="mobile-nav-link" href="/security" onClick={() => setMenuOpen(false)}>Seguridad<Icon name="arrow-up-right" /></a></nav>}</header>;
 }
 
-function Hero({ onSelectService }: { onSelectService: (id: string) => void }) {
+function Hero() {
   return <section className="hero-shell" aria-labelledby="hero-heading">
     <div className="container hero">
       <div className="hero-copy">
@@ -123,9 +113,8 @@ function Hero({ onSelectService }: { onSelectService: (id: string) => void }) {
         <p className="hero-description">Protegemos lo que importa.<br />Ciberseguridad, seguridad operativa y datos sensibles, con criterio.</p>
         <div className="hero-actions"><ContactDialog><Button>Hablemos de seguridad<Icon name="arrow-up-right" /></Button></ContactDialog><a className="text-link" href="#servicios">Explorar especialidades<Icon name="arrow-down" size={16} /></a></div>
       </div>
-      <div className="hero-art" aria-hidden="true"><LiquidField /></div>
+      <div className="hero-art" aria-hidden="true"><Suspense fallback={<div className="sculpture-fallback is-loading"><span /><span /><span /></div>}><LiquidField /></Suspense></div>
     </div>
-    <div className="container expertise-strip">{services.map(service => <a href={'#' + service.id} key={service.id} onClick={() => onSelectService(service.id)}><Icon name={service.icon} size={20} /><span>{service.title}</span><Icon name="arrow-up-right" size={16} /></a>)}</div>
   </section>;
 }
 
@@ -152,22 +141,23 @@ function Home() {
   const selected = services.find(service => service.id === serviceId) || services[0];
   useEffect(() => {
     function syncHash() {
-      const hash = window.location.hash.slice(1);
+      const hash = window.location.hash.slice(1).replace(/^panel-/, '').replace(/^service-panel-/, '');
       if (services.some(service => service.id === hash)) { setServiceId(hash); setSection('especialidades'); document.getElementById('servicios')?.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth', block: 'start' }); }
-      else if (sections.some(item => item.id === hash)) setSection(hash);
+      else if (sections.some(item => item.id === hash)) { setSection(hash); document.getElementById('servicios')?.scrollIntoView({ block: 'start', behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' }); }
       else if (hash === 'servicios') setSection('especialidades');
     }
     syncHash(); window.addEventListener('hashchange', syncHash);
     return () => window.removeEventListener('hashchange', syncHash);
   }, []);
-  function selectService(id: string) { setServiceId(id); setSection('especialidades'); }
-  return <><Hero onSelectService={selectService} />
+  function selectSection(id: string) { setSection(id); window.history.replaceState(null, '', '#panel-' + id); }
+  function selectService(id: string) { setServiceId(id); window.history.replaceState(null, '', '#service-panel-' + id); }
+  return <><Hero />
     <section id="servicios" className="expertise-section container" aria-labelledby="expertise-heading">
       <div className="expertise-heading"><div><p className="section-label">SEGURIDAD CON CRITERIO</p><h2 id="expertise-heading">Tres perspectivas.<br /><span>Una misma defensa.</span></h2></div><p>Sistemas, personas e información.<br />Protección conectada con tu realidad.</p></div>
       <span id="enfoque" className="section-anchor" aria-hidden="true" />
-      <div className="section-tabs" role="tablist" aria-label="Explorar Stane">{sections.map(item => <a key={item.id} href={'#' + (item.id === 'especialidades' ? 'servicios' : item.id)} role="tab" id={'tab-' + item.id} aria-selected={section === item.id} aria-controls={'panel-' + item.id} tabIndex={section === item.id ? 0 : -1} onClick={event => { event.preventDefault(); setSection(item.id); }} onKeyDown={event => tabKey(event, sections.map(s => s.id), section, setSection)}>{item.label}<Icon name="arrow-up-right" size={16} /></a>)}</div>
+      <div className="section-tabs" role="tablist" aria-label="Explorar Stane">{sections.map(item => <a key={item.id} href={'#panel-' + item.id} role="tab" id={'tab-' + item.id} aria-selected={section === item.id} aria-controls={'panel-' + item.id} tabIndex={section === item.id ? 0 : -1} onClick={event => { event.preventDefault(); selectSection(item.id); }} onKeyDown={event => tabKey(event, sections.map(s => s.id), section, selectSection)}>{item.label}<Icon name="arrow-up-right" size={16} /></a>)}</div>
       <div id="panel-especialidades" className="workspace-panel" role="tabpanel" aria-labelledby="tab-especialidades" hidden={section !== 'especialidades'} tabIndex={0}>
-        <div className="specialty-layout"><div className="specialty-tabs" role="tablist" aria-label="Áreas de protección" aria-orientation="vertical">{services.map(service => <a key={service.id} id={'service-tab-' + service.id} role="tab" href={'#' + service.id} aria-selected={serviceId === service.id} aria-controls={'service-panel-' + service.id} tabIndex={serviceId === service.id ? 0 : -1} onClick={event => { event.preventDefault(); setServiceId(service.id); }} onKeyDown={event => tabKey(event, services.map(s => s.id), serviceId, setServiceId)}><span className="specialty-icon"><Icon name={service.icon} size={24} /></span><span><small>{service.short}</small>{service.title}</span><Icon name="chevron-right" size={16} /></a>)}</div>
+        <div className="specialty-layout"><div className="specialty-tabs" role="tablist" aria-label="Áreas de protección" aria-orientation="vertical">{services.map(service => <a key={service.id} id={'service-tab-' + service.id} role="tab" href={'#service-panel-' + service.id} aria-selected={serviceId === service.id} aria-controls={'service-panel-' + service.id} tabIndex={serviceId === service.id ? 0 : -1} onClick={event => { event.preventDefault(); selectService(service.id); }} onKeyDown={event => tabKey(event, services.map(s => s.id), serviceId, selectService)}><span className="specialty-icon"><Icon name={service.icon} size={24} /></span><span><small>{service.short}</small>{service.title}</span><Icon name="chevron-right" size={16} /></a>)}</div>
           {services.map(service => <div key={service.id} id={'service-panel-' + service.id} className="specialty-content" role="tabpanel" aria-labelledby={'service-tab-' + service.id} hidden={serviceId !== service.id} tabIndex={0}><div className="specialty-copy"><p className="section-label">{service.number} / {service.title}</p><h3>{service.headline}</h3><p className="specialty-summary">{service.summary}</p><ul className="specialty-points">{service.details.map(([title, text]) => <li key={title}><Icon name="check" size={16} /><div><h4>{title}</h4><p>{text}</p></div></li>)}</ul><ContactDialog service={service.title}><Button size="sm">Consultar sobre esta área<Icon name="arrow-up-right" size={16} /></Button></ContactDialog></div><Deliverable service={service} /></div>)}
         </div>
       </div>
@@ -179,27 +169,21 @@ function Home() {
       <div id="panel-entregables" className="workspace-panel deliverables-panel" role="tabpanel" aria-labelledby="tab-entregables" hidden={section !== 'entregables'} tabIndex={0}>
         <div className="panel-intro"><p className="section-label">CLARIDAD PARA DECIDIR</p><h3>Un análisis útil.<br /><span>Un siguiente paso claro.</span></h3><p>El alcance se acuerda para cada proyecto. Estos ejemplos muestran cómo puede organizarse el resultado.</p><a className="text-link" href="#contacto">Definir mi alcance<Icon name="arrow-up-right" size={16} /></a></div><Deliverable service={selected} /><div className="delivery-list">{[['file-text', 'Diagnóstico', 'Qué está expuesto y por qué importa.'], ['sliders', 'Prioridades', 'Medidas ordenadas por riesgo y contexto.'], ['compass', 'Plan de acción', 'Pasos concretos para reducir la exposición.']].map(([icon, title, text]) => <div key={title}><Icon name={icon as 'file-text' | 'sliders' | 'compass'} size={24} /><h4>{title}</h4><p>{text}</p></div>)}</div>
       </div>
-      <div id="panel-preguntas" className="workspace-panel questions-panel" role="tabpanel" aria-labelledby="tab-preguntas" hidden={section !== 'preguntas'} tabIndex={0}><div className="panel-intro"><p className="section-label">ANTES DEL PRIMER PASO</p><h3>Una conversación<br /><span>con confianza.</span></h3><p>Sin credenciales ni documentos sensibles en el primer contacto.</p></div><Accordion type="single" collapsible className="faq-list">{questions.map(([question, answer], i) => <AccordionItem value={'faq-' + i} key={question} className="faq-item"><AccordionTrigger className="faq-question">{question}</AccordionTrigger><AccordionContent>{answer}</AccordionContent></AccordionItem>)}</Accordion></div>
+      <div id="panel-preguntas" className="workspace-panel questions-panel" role="tabpanel" aria-labelledby="tab-preguntas" hidden={section !== 'preguntas'} tabIndex={0}><div className="panel-intro"><p className="section-label">ANTES DEL PRIMER PASO</p><h3>Una conversación<br /><span>con confianza.</span></h3><p>Sin credenciales ni documentos sensibles en el primer contacto.</p></div><div className="faq-list">{questions.map(([question, answer]) => <details key={question} className="faq-item"><summary className="faq-question">{question}<Icon name="plus" /></summary><div className="faq-answer">{answer}</div></details>)}</div></div>
     </section>
     <section id="contacto" className="contact-section" aria-labelledby="contact-heading"><div className="container contact-layout"><div><p className="section-label">HABLEMOS</p><h2 id="contact-heading">Lo importante merece<br /><span>estar protegido.</span></h2></div><div className="contact-copy"><p>Cuéntanos qué necesitas proteger.<br />Empecemos por una conversación.</p><div className="contact-actions"><ContactDialog><Button>Iniciar conversación<Icon name="arrow-up-right" /></Button></ContactDialog><a className="text-link" href={'mailto:' + config.contactEmail}>{config.contactEmail}<Icon name="arrow-up-right" size={16} /></a></div></div></div></section>
   </>;
 }
 
-const pageContent: Record<string, {label: string; title: string; lead: string; sections: {title: string; content: React.ReactNode}[]}> = {
-  '/security': {label: '', title: '', lead: '', sections: []},
-  '/privacy': {label: '', title: '', lead: '', sections: []},
-  '/tos': {label: '', title: '', lead: '', sections: []},
-  '/purchase': {label: '', title: '', lead: '', sections: []},
-};
 function LegalPage({ path }: {path: string}) {
   const data = pageContent[path];
   if (!data) return <div className="container legal-page"><h1>Página no encontrada.</h1><a href="/">Volver al inicio</a></div>;
-  return <article className="container legal-page"><a className="back-link" href="/"><Icon name="arrow-left" size={16} />Volver a Stane</a><div className="legal-header"><p className="section-label">{data.label}</p><h1>{data.title}</h1><p>{data.lead}</p><span className="legal-meta">Última actualización: 9 de octubre de 2026</span></div><div className="legal-content">{data.sections.map(section => <section className="legal-section" key={section.title}><h2>{section.title}</h2><div>{section.content}</div></section>)}</div></article>;
+  return <article className="container legal-page"><a className="back-link" href="/"><Icon name="arrow-left" size={16} />Volver a Stane</a><div className="legal-header"><p className="section-label">{data.label}</p><h1>{data.title}</h1><p>{data.lead}</p><span className="legal-meta">Última actualización: 13 de octubre de 2026</span></div><div className="legal-content">{data.sections.map(section => <section className="legal-section" key={section.title}><h2>{section.title}</h2><div>{section.content}</div></section>)}</div></article>;
 }
 function Footer() {
-  return <footer className="footer"><div className="container footer-inner"><Brand /><div className="footer-links"><a href="/security">Seguridad</a><a href="/privacy">Privacidad</a><a href="/tos">Términos</a><a href="/purchase">Compras</a><a href="/.well-known/security.txt">security.txt<Icon name="arrow-up-right" size={16} /></a></div><span className="copyright">© 2026 Stane</span></div></footer>;
+  return <footer className="footer"><div className="container footer-inner"><Brand /><div className="footer-links"><a href="/security">Seguridad</a><a href="/privacy">Privacidad</a><a href="/tos">Términos</a><a href="/purchase">Contratación</a><a href="/.well-known/security.txt">security.txt<Icon name="arrow-up-right" size={16} /></a></div><span className="copyright">© 2026 Stane</span></div></footer>;
 }
 export default function App({ path = '/' }: { path?: string }) {
   const normalized = path.replace(/\/$/, '') || '/';
-  return <div className="site-frame">{normalized === '/' && <Atmosphere />}<a href="#main" className="skip-link">Saltar al contenido</a><div id="top" /><Header home={normalized === '/'} /><main id="main">{normalized === '/' ? <Home /> : <LegalPage path={normalized} />}</main><Footer /></div>;
+  return <div className="site-frame"><noscript><style>{`@layer base{.workspace-panel[hidden],.specialty-content[hidden]{display:grid!important}}.workspace-panel+.workspace-panel{margin-top:40px}.specialty-content+.specialty-content{margin-top:40px}`}</style></noscript><a href="#main" className="skip-link">Saltar al contenido</a><div id="top" /><Header home={normalized === '/'} /><main id="main">{normalized === '/' ? <Home /> : <LegalPage path={normalized} />}</main><Footer /></div>;
 }

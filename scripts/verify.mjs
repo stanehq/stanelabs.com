@@ -31,11 +31,21 @@ for (const route of requiredRoutes) {
   assert.match(html, /<html[^>]*lang="es"/, `${route}: Spanish document language missing.`);
   assert(html.includes(`<link rel="canonical" href="${origin}${route}${route === '/' ? '' : '/'}"`), `${route}: canonical URL missing.`);
   assert(html.includes(`<meta name="robots" content="${config.sitePrivate !== false ? 'noindex, follow' : 'index, follow'}"`), `${route}: indexing directive mismatches configuration.`);
-  if (!['/security', '/privacy', '/tos', '/purchase'].includes(route)) assert.match(html, /<meta name="description" content="[^"]{40,}"/, `${route}: description missing.`);
+  assert.match(html, /<meta name="description" content="[^"]{40,}"/, `${route}: description missing.`);
+  assert(!/https:\/\/fonts\.(googleapis|gstatic)\.com/.test(html), `${route}: remote font request in HTML.`);
   const ldJson = [...html.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)].map((match) => JSON.parse(match[1]));
   assert(ldJson.some((item) => item['@graph']?.some((entity) => entity['@type'] === 'Organization')), `${route}: Organization structured data missing.`);
+  const organizations = ldJson.flatMap(item => item['@graph'] || []).filter(entity => entity['@type'] === 'Organization');
+  for (const entity of organizations) assert.deepEqual(entity.contactPoint.availableLanguage, ['es'], `${route}: unsupported language advertised.`);
   const mainText = (html.match(/<main\b[\s\S]*?<\/main>/)?.[0] || '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ');
-  if (route === '/') assert(mainText.length > 180, `${route}: content must be prerendered.`);
+  assert(mainText.length > (route === '/' ? 180 : 600), `${route}: content must be prerendered.`);
+  assert.match(mainText, /security@stanelabs\.com/, `${route}: contact email must be readable without JavaScript.`);
+  assert(!/data-cfemail|email-decode\.min\.js/.test(html), `${route}: obfuscated email in export.`);
+  if (route === '/') {
+    const details = html.match(/<details\b[\s\S]*?<\/details>/g) || [];
+    assert.equal(details.length, 3, 'FAQ must contain three native disclosures.');
+    for (const item of details) assert(item.replace(/<summary\b[\s\S]*?<\/summary>/, '').replace(/<[^>]+>/g, '').length > 70, 'FAQ answer missing from HTML.');
+  }
 }
 
 const security = await read('.well-known/security.txt');
@@ -53,6 +63,7 @@ const expiry = Date.parse(values('Expires')[0]);
 assert(Number.isFinite(expiry) && expiry > Date.now(), 'security.txt expiry has passed: renew it before release.');
 assert.equal(values('Canonical')[0], `${origin}/.well-known/security.txt`);
 assert.equal(values('Policy')[0], `${origin}/security`);
-assert.equal(values('Preferred-Languages')[0], 'es, en');
+assert.equal(values('Preferred-Languages')[0], 'es');
+await access(path.join(dist, 'sculpture/knot.bin'));
 await assert.rejects(access(path.join(dist, 'security.txt')), { code: 'ENOENT' });
 console.log(`Verified ${requiredRoutes.length} prerendered routes, SEO metadata, manifest icons and security.txt.`);

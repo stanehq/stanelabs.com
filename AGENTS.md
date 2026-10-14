@@ -15,4 +15,6 @@ scanner caches out of source control. Keep exact dependency/action/tool/image
 pins and their checksums consistent. Adapt attestation verification to the
 actual repository visibility; private previews and GitHub source visibility
 are independent. The website uses TikTok Sans headings, Geist body text,
-Feather icons and the existing semantic color tokens.
+15 inline SVG icons derived from Feather (MIT) and the semantic color tokens.
+StaneLabs is not yet constituted: keep sitePrivate true until the real owner
+and launch privacy/contracting details have been provided. Do not invent them.

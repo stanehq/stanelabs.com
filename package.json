@@ -10,8 +10,8 @@
     "dev": "next dev --hostname 127.0.0.1",
     "dev:visual": "vite --host 127.0.0.1",
     "dev:api": "npm run dev --workspace backend",
-    "build": "node scripts/seo.mjs && next build --webpack && node scripts/finalize-next.mjs && node scripts/seo.mjs --dist && node scripts/verify.mjs && npm run build --workspace backend",
-    "build:visual": "vite build && tsx scripts/prerender.tsx",
+    "build": "node scripts/generate-geometry.mjs && node scripts/seo.mjs && next build --webpack && node scripts/finalize-next.mjs && node scripts/seo.mjs --dist && node scripts/verify.mjs && npm run build --workspace backend",
+    "build:visual": "node scripts/generate-geometry.mjs && vite build && tsx scripts/prerender.tsx && node scripts/seo.mjs --dist",
     "preview": "vite preview --host 127.0.0.1",
     "start": "node backend/dist/main.js",
     "lint": "eslint . --max-warnings 0",
@@ -21,12 +21,10 @@
     "test:artifacts": "python3 -m unittest discover -s scripts/ci -p test_artifacts.py -v"
   },
   "dependencies": {
-    "@radix-ui/react-accordion": "1.2.21",
     "@radix-ui/react-dialog": "1.2.0",
     "@radix-ui/react-slot": "1.4.0",
     "class-variance-authority": "0.7.1",
     "clsx": "2.1.1",
-    "feather-icons": "4.29.2",
     "next": "16.4.0",
     "react": "19.3.0",
     "react-dom": "19.3.0",
