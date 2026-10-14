@@ -5,7 +5,7 @@ import config from '../project-config.json';
 import '../src/styles.css';
 const headingFont = localFont({ src: '../src/fonts/tiktok-sans-latin.woff2', variable: '--font-tiktok', weight: '400 600', display: 'swap' });
 const bodyFont = localFont({ src: '../src/fonts/geist-latin.woff2', variable: '--font-geist', weight: '400 500', display: 'swap' });
-export const viewport: Viewport = { width: 'device-width', initialScale: 1, themeColor: '#3c7bdb' };
+export const viewport: Viewport = { width: 'device-width', initialScale: 1, themeColor: '#5d8fce' };
 const structuredData = {
   '@context': 'https://schema.org', '@graph': [
     { '@type': 'Organization', '@id': `${config.siteUrl}/#organization`, name: config.name, url: `${config.siteUrl}/`, logo: `${config.siteUrl}/brand/icon-512.png`, contactPoint: { '@type': 'ContactPoint', contactType: 'security', email: config.securityEmail, availableLanguage: ['es'] } },

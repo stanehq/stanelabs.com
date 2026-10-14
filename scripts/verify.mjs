@@ -11,7 +11,7 @@ const read = (filename) => readFile(path.join(dist, filename), 'utf8');
 const manifest = JSON.parse(await read('manifest.webmanifest'));
 assert.equal(manifest.name, config.name);
 assert.equal(manifest.start_url, '/');
-assert.equal(manifest.theme_color, '#3c7bdb');
+assert.equal(manifest.theme_color, '#5d8fce');
 assert(manifest.icons.length > 0, 'Manifest requires at least one supplied logo icon.');
 for (const icon of manifest.icons) {
   assert(icon.src.startsWith('/') && !icon.src.includes('..'), 'Manifest icons must use local absolute paths.');
