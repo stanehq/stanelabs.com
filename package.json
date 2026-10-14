@@ -21,7 +21,6 @@
     "test:artifacts": "python3 -m unittest discover -s scripts/ci -p test_artifacts.py -v"
   },
   "dependencies": {
-    "@radix-ui/react-dialog": "1.2.0",
     "@radix-ui/react-slot": "1.4.0",
     "class-variance-authority": "0.7.1",
     "clsx": "2.1.1",

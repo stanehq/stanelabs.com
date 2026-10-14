@@ -3,7 +3,9 @@ const normalize = (v: Vector): Vector => { const length = Math.hypot(...v) || 1;
 const subtract = (a: Vector, b: Vector): Vector => a.map((n, i) => n - b[i]) as Vector;
 const cross = (a: Vector, b: Vector): Vector => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
 export function knotGeometry() {
-  const lengthSegments = 320, tubeSegments = 32, tubeRadius = .185;
+  // At the hero's display size these segments retain the smooth silhouette,
+  // while avoiding geometry that cannot be distinguished at a screen pixel.
+  const lengthSegments = 192, tubeSegments = 24, tubeRadius = .185;
   const positions: number[] = [], normals: number[] = [], occlusions: number[] = [], indices: number[] = [];
   const center = (t: number): Vector => {
     const radius = .81 + .27 * Math.cos(3 * t);

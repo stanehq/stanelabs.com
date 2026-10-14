@@ -42,9 +42,12 @@ for (const route of requiredRoutes) {
   assert.match(mainText, /security@stanelabs\.com/, `${route}: contact email must be readable without JavaScript.`);
   assert(!/data-cfemail|email-decode\.min\.js/.test(html), `${route}: obfuscated email in export.`);
   if (route === '/') {
-    const details = html.match(/<details\b[\s\S]*?<\/details>/g) || [];
-    assert.equal(details.length, 3, 'FAQ must contain three native disclosures.');
-    for (const item of details) assert(item.replace(/<summary\b[\s\S]*?<\/summary>/, '').replace(/<[^>]+>/g, '').length > 70, 'FAQ answer missing from HTML.');
+    assert(!/<details\b|role="tab(?:list|panel)?"/.test(html), 'Homepage information must not be hidden behind tabs or disclosures.');
+    const entries = html.match(/<article\b[^>]*class="faq-entry"[\s\S]*?<\/article>/g) || [];
+    assert.equal(entries.length, 3, 'FAQ must contain three visible answers.');
+    for (const item of entries) assert(item.replace(/<h3\b[\s\S]*?<\/h3>/, '').replace(/<[^>]+>/g, '').length > 70, 'FAQ answer missing from HTML.');
+    for (const id of ['cyber', 'opsec', 'data']) assert.match(html, new RegExp(`<article[^>]*id="${id}"[^>]*class="service-card"`), `${id}: service information must be directly available.`);
+    assert.match(html, /<form[^>]*method="post"/, 'Contact form must not leak personal data into query parameters.');
   }
 }
 
