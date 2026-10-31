@@ -232,7 +232,7 @@ jobs:
           python3 scripts/ci/prepare-artifacts.py --verify-only
           node --input-type=module -e "import fs from 'node:fs';const info=JSON.parse(fs.readFileSync('.ci/artifacts/build-info.json'));if(info.sourceCommit!==process.env.GITHUB_SHA||info.sourceRef!==process.env.GITHUB_REF)throw new Error('Source identity mismatch')"
       - name: Log in to private GHCR with this job's scoped token
-        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
+        uses: docker/login-action@81c6f93d4bc991e510b342a00b419b3bb4efc5c6 # v4.7.0
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
