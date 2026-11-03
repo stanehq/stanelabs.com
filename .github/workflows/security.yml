@@ -44,8 +44,8 @@ jobs:
         run: |
           # actionlint 1.7.12 predates GitHub's $/ syntax. Ignore only its two known parser diagnostics.
           actionlint \
-            -ignore 'reusable workflow call "\\$/.+" at "uses" is not following the format' \
-            -ignore 'specifying action "\\$/.+" in invalid format because ref is missing' \
+            -ignore 'reusable workflow call "\$/.+" at "uses" is not following the format' \
+            -ignore 'specifying action "\$/.+" in invalid format because ref is missing' \
             -shellcheck='' -pyflakes=''
           zizmor --offline --no-progress --format sarif .github/workflows > .ci/reports/zizmor.sarif
           zizmor --offline --no-progress .github/workflows
