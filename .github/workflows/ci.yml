@@ -2,7 +2,7 @@ name: CI and verified GHCR publication
 
 on:
   pull_request:
-    branches: [main]
+    branches: [main, dev]
   push:
     branches: [main]
     tags: ['v*.*.*']
