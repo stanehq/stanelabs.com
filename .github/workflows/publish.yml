@@ -45,7 +45,7 @@ jobs:
       - name: Download the verified image artifact
         uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333
         with:
-          artifact_ids: ${{ inputs.artifact_id }}
+          artifact-ids: ${{ inputs.artifact_id }}
           path: .ci/artifacts
           merge-multiple: true
       - name: Verify archive checksums and source identity
