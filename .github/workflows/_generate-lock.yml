@@ -19,8 +19,10 @@ jobs:
         with:
           node-version-file: .node-version
           package-manager-cache: false
-      - name: Generate lockfile
-        run: npm install --package-lock-only --ignore-scripts --no-audit
+      - name: Regenerate lockfile
+        run: |
+          npm install --package-lock-only --ignore-scripts --no-audit
+          npm update body-parser --package-lock-only --ignore-scripts --no-audit
       - name: Upload generated lockfile
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
