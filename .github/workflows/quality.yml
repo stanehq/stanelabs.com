@@ -29,6 +29,15 @@ jobs:
         with:
           node-version-file: .node-version
           package-manager-cache: false
+      - name: Generate updated lockfile
+        run: npm install --package-lock-only --ignore-scripts --no-audit
+      - name: Retain generated lockfile temporarily
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: stanelabs-updated-lockfile-${{ github.run_id }}-${{ github.run_attempt }}
+          path: package-lock.json
+          if-no-files-found: error
+          retention-days: 1
       - name: Verify dependency pins and install locked dependencies
         run: |
           node scripts/ci/verify-pins.mjs
