@@ -1,0 +1,74 @@
+name: Security
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: bash
+
+env:
+  CI: 'true'
+  NEXT_TELEMETRY_DISABLED: '1'
+
+jobs:
+  security:
+    name: Dependency, secrets and workflow security
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - name: Checkout full history without persisted credentials
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Set exact Node version
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+        with:
+          node-version-file: .node-version
+          package-manager-cache: false
+      - name: Install locked dependencies
+        run: npm ci --ignore-scripts
+      - name: Audit dependencies and publisher signatures
+        run: |
+          mkdir -p .ci/reports
+          npm audit --audit-level=high --json > .ci/reports/npm-audit.json
+          npm audit signatures | tee .ci/reports/npm-signatures.txt
+          npm audit signatures --json > .ci/reports/npm-signatures.json
+      - name: Install checksum-verified security tools
+        run: bash scripts/ci/install-tools.sh actionlint zizmor gitleaks trivy
+      - name: Validate workflow syntax and privilege boundaries
+        run: |
+          # actionlint 1.7.12 predates GitHub's $/ syntax. Ignore only its two known parser diagnostics.
+          actionlint \
+            -ignore 'reusable workflow call "\$/.+" at "uses" is not following the format' \
+            -ignore 'specifying action "\$/.+" in invalid format because ref is missing' \
+            -shellcheck='' -pyflakes=''
+          zizmor --offline --no-progress --format sarif .github/workflows > .ci/reports/zizmor.sarif
+          zizmor --offline --no-progress .github/workflows
+      - name: Scan full Git history with redacted results
+        run: gitleaks git . --redact=100 --config .gitleaks.toml --report-format json --report-path .ci/reports/gitleaks.json --log-opts='--all'
+      - name: Run reviewed local Semgrep rules and rule tests
+        run: |
+          scanner=$(node --input-type=module -e "import fs from 'node:fs';console.log(JSON.parse(fs.readFileSync('scripts/ci/images.lock.json')).semgrep)")
+          docker run --rm --network none --user "$(id -u):$(id -g)" \
+            -e SEMGREP_SEND_METRICS=off -e SEMGREP_ENABLE_VERSION_CHECK=0 \
+            -e HOME=/tmp -e SEMGREP_SETTINGS_FILE=/tmp/semgrep-settings.yml -e XDG_CACHE_HOME=/tmp/.cache \
+            -v "$PWD:/src" -w /src --entrypoint bash "$scanner" scripts/ci/check-sast.sh
+      - name: Scan source lockfiles and container configuration
+        run: |
+          trivy fs --cache-dir .ci/trivy --scanners vuln,misconfig --skip-check-update \
+            --skip-dirs node_modules --skip-dirs backend/node_modules --skip-dirs .next \
+            --skip-dirs .ci --skip-dirs dist --skip-dirs backend/dist \
+            --severity HIGH,CRITICAL --exit-code 1 --format json --output .ci/reports/trivy-source.json .
+      - name: Retain security reports
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        with:
+          name: security-reports-${{ github.run_id }}-${{ github.run_attempt }}
+          path: .ci/reports/
+          if-no-files-found: ignore
+          retention-days: 14
