@@ -22,7 +22,7 @@ for (const file of await readdir('.github/workflows')) {
   const source = await readFile(path.join('.github/workflows', file), 'utf8')
   for (const match of source.matchAll(/^\s*uses:\s*(\S+)/gm)) {
     const reference = match[1]
-    if (reference.startsWith('$/')) continue
+    if (reference.startsWith('./')) continue
     const pinned = /^([A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+)@([0-9a-f]{40})$/.exec(reference)
     if (!pinned || actions[pinned[1]]?.commit !== pinned[2]) throw new Error(`Workflow action differs from its verified pin: ${reference}`)
   }
