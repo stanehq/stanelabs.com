@@ -83,10 +83,10 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
 .text-link:hover { text-decoration: underline; text-underline-offset: 4px; }
 .hero-art { position: relative; width: calc(100% + 40px); height: 420px; margin-right: -40px; pointer-events: none; animation: sculpture-enter 1s var(--ease-studio) both; }
 .liquid-field, .sculpture-canvas { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.sculpture-canvas { opacity: 0; transition: opacity 320ms ease; }
+.sculpture-canvas.is-ready { opacity: 1; }
 .sculpture-canvas.is-unavailable { display: none; }
 .sculpture-ground { position: absolute; z-index: -1; bottom: 11%; left: 27%; width: 46%; height: 20px; border-radius: 50%; background: radial-gradient(ellipse, rgba(17,24,39,.09), transparent 72%); transform: translateX(var(--sculpture-shadow-x, 0px)) scaleX(var(--sculpture-shadow-scale, 1)); }
-.sculpture-fallback { position: absolute; inset: 15%; transform: rotate(-20deg); } .sculpture-fallback span { position: absolute; inset: 15%; border: 28px solid var(--primary); border-radius: 50%; box-shadow: inset 7px 7px 12px var(--border), 5px 12px 20px var(--border); }
-.sculpture-fallback span:nth-child(2) { transform: rotate(60deg) translateX(18%); } .sculpture-fallback span:nth-child(3) { transform: rotate(-60deg) translateX(-18%); } .sculpture-fallback.is-loading { opacity: .55; }
 .section-label { color: var(--muted); font-size: 14px; line-height: 1.5; letter-spacing: .035em; }
 .section-heading { margin-bottom: 24px; } .section-heading .section-label { margin-bottom: 10px; } .section-heading h2 span { color: var(--muted); }
 .legacy-anchor { position: absolute; top: 0; pointer-events: none; }

@@ -230,5 +230,5 @@ export default function LiquidField({ className = '' }: { className?: string }) 
     initialize().catch(() => { if (!controller.signal.aborted) setFallback(true); });
     return () => { controller.abort(); cleanup(); };
   }, []);
-  return <div ref={fieldRef} className={`liquid-field ${className}`} aria-hidden="true"><div className="sculpture-ground" />{!ready && !fallback && <div className="sculpture-fallback is-loading"><span /><span /><span /></div>}<canvas ref={canvasRef} className={fallback ? 'sculpture-canvas is-unavailable' : 'sculpture-canvas'} />{fallback && <div className="sculpture-fallback"><span /><span /><span /></div>}</div>;
+  return <div ref={fieldRef} className={`liquid-field ${className}`} aria-hidden="true"><div className="sculpture-ground" /><canvas ref={canvasRef} className={`sculpture-canvas${ready ? ' is-ready' : ''}${fallback ? ' is-unavailable' : ''}`} /></div>;
 }

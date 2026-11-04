@@ -17,6 +17,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
     <link rel="icon" type="image/svg+xml" href="/brand/favicon.svg" />
     <link rel="apple-touch-icon" href="/brand/icon-192.png" />
     <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="preload" href="/sculpture/knot.bin?v=2" as="fetch" crossOrigin="anonymous" />
     <script type="application/ld+json" dangerouslySetInnerHTML={{__html: JSON.stringify(structuredData).replace(/</g, '\\u003c')}} />
   </head><body>{children}</body></html>;
 }
