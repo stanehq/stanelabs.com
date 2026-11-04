@@ -15,23 +15,31 @@ concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
+defaults:
+  run:
+    shell: bash
+
+env:
+  CI: 'true'
+  NEXT_TELEMETRY_DISABLED: '1'
+
 jobs:
   quality:
     name: Quality
-    uses: $/.github/workflows/quality.yml
+    uses: ./.github/workflows/quality.yml
 
   tests:
     name: Tests
-    uses: $/.github/workflows/tests.yml
+    uses: ./.github/workflows/tests.yml
 
   security:
     name: Security
-    uses: $/.github/workflows/security.yml
+    uses: ./.github/workflows/security.yml
 
   container:
     name: Container
     needs: [quality, tests, security]
-    uses: $/.github/workflows/container.yml
+    uses: ./.github/workflows/container.yml
 
   publish:
     name: Publish
@@ -42,7 +50,7 @@ jobs:
       packages: write
       attestations: write
       id-token: write
-    uses: $/.github/workflows/publish.yml
+    uses: ./.github/workflows/publish.yml
     with:
       digest: ${{ needs.container.outputs.digest }}
       artifact_id: ${{ needs.container.outputs.artifact_id }}
