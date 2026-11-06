@@ -3,5 +3,5 @@
   "siteUrl": "https://www.stanelabs.com",
   "contactEmail": "security@stanelabs.com",
   "securityEmail": "security@stanelabs.com",
-  "sitePrivate": true
+  "sitePrivate": false
 }
