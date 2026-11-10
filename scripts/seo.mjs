@@ -1,11 +1,17 @@
 import { access, mkdir, readdir, readFile, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { projectRoot as root } from './project-root.mjs';
+import { DEFAULT_LOCALE, LOCALES, ROUTES, localePath, parsePath } from '../src/i18n/config.ts';
 
 const readJson = async (filename) => JSON.parse(await readFile(path.join(root, filename), 'utf8'));
 const config = await readJson('project-config.json');
-// Shared with src/lib/metadata.ts so both builds publish the same titles.
-const { pages: definitions, socialImageAlt } = await readJson('src/lib/page-metadata.json');
+// Shared with src/lib/metadata.ts so both builds publish the same titles, in every language.
+const definitions = {};
+for (const locale of LOCALES) {
+  const { meta } = await readJson(`src/i18n/${locale}.json`);
+  for (const route of ROUTES) definitions[localePath(locale, route)] = meta.pages[route];
+}
+const { socialImageAlt } = (await readJson('src/i18n/es.json')).meta;
 const productionUrl = new URL(config.siteUrl);
 if (productionUrl.protocol !== 'https:' || productionUrl.username || productionUrl.password || productionUrl.search || productionUrl.hash || !['', '/'].includes(productionUrl.pathname)) {
   throw new Error('project-config.json: siteUrl must be a clean HTTPS origin.');
@@ -86,7 +92,16 @@ if (!icons.length && await exists(path.join(root, 'public', 'brand', 'favicon.sv
 const manifest = { id: '/', name, short_name: name, description: definitions['/'].description, lang: 'es', start_url: '/', scope: '/', display: 'standalone', background_color: '#FFFFFF', theme_color: '#3b7bdd', icons };
 const contacts = email ? [`Contact: mailto:${email}`, `Contact: ${origin}/security`] : [`Contact: ${origin}/security`];
 const securityTxt = [`# ${name}: responsible vulnerability disclosure`, ...contacts, `Expires: ${expiry}`, `Preferred-Languages: es`, `Canonical: ${origin}/.well-known/security.txt`, `Policy: ${origin}/security`, ''].join('\n');
-const sitemap = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${[...new Set(routes)].sort().map((route) => `  <url><loc>${escapeHtml(`${origin}${route}${route === '/' ? '' : '/'}`)}</loc></url>`).join('\n')}\n</urlset>\n`;
+// Every page lists its translations, so search engines can serve each visitor the right language.
+const pageUrl = (route) => `${origin}${route}${route === '/' ? '' : '/'}`;
+const sitemapEntry = (route) => {
+  const { route: base } = parsePath(route);
+  const alternates = LOCALES.map((locale) => [locale, localePath(locale, base)]).filter(([, path]) => routes.includes(path));
+  const links = [...alternates, ['x-default', localePath(DEFAULT_LOCALE, base)]]
+    .map(([lang, path]) => `<xhtml:link rel="alternate" hreflang="${lang}" href="${escapeHtml(pageUrl(path))}"/>`).join('');
+  return `  <url><loc>${escapeHtml(pageUrl(route))}</loc>${links}</url>`;
+};
+const sitemap = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">\n${[...new Set(routes)].sort().map(sitemapEntry).join('\n')}\n</urlset>\n`;
 
 await writeFile(path.join(output, 'manifest.webmanifest'), `${JSON.stringify(manifest, null, 2)}\n`, 'utf8');
 // Crawling remains allowed: a crawler must read HTML to observe the private build's noindex metadata.

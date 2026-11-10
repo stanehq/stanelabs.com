@@ -1,30 +1,31 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { useI18n } from '../i18n/I18nProvider';
 import { CONTACT_HASH, CONTACT_TOPIC_EVENT } from '../lib/events';
 import { Brand } from './Brand';
 import ContactSection from './ContactSection';
 import { Icon } from './Icon';
+import { LanguageSwitch } from './LanguageSwitch';
 import { Button } from './ui/button';
 
-const sectionLinks = [
-  ['servicios', 'Especialidades'],
-  ['enfoque', 'Cómo trabajamos'],
-  ['contacto', 'Contacto'],
-] as const;
-const contactLinkSelector = `a[href="${CONTACT_HASH}"], a[href="/${CONTACT_HASH}"]`;
+/** Anchors of the homepage sections linked from the navigation. */
+const SECTION_IDS = ['servicios', 'enfoque', 'contacto'] as const;
+// Matches the contact fragment on the homepage of any language: #contacto, /#contacto, /en#contacto.
+const contactLinkSelector = `a[href$="${CONTACT_HASH}"]`;
 
 function isPlainLeftClick(event: MouseEvent) {
   return event.button === 0 && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey;
 }
 
 export function Header({ home }: { home: boolean }) {
+  const { t, href } = useI18n();
   const [menuOpen, setMenuOpen] = useState(false);
   const [contactOpen, setContactOpen] = useState(false);
   const headerRef = useRef<HTMLElement>(null);
   const contactButtonRef = useRef<HTMLButtonElement>(null);
   // Section links point at the homepage; from other pages they need its path.
-  const sectionHref = (id: string) => `${home ? '' : '/'}#${id}`;
+  const sectionHref = (id: string) => `${home ? '' : href('/')}#${id}`;
 
   const openContact = useCallback(() => {
     setContactOpen(true);
@@ -91,33 +92,35 @@ export function Header({ home }: { home: boolean }) {
     <header ref={headerRef} className="site-header">
       <div className="header-inner" data-build="frame">
         <Brand build="image" />
-        <nav className="desktop-nav" aria-label="Navegación principal" data-build="text">
-          {sectionLinks.map(([id, label]) => (
-            <a key={id} href={sectionHref(id)} className="nav-link">{label}</a>
+        <nav className="desktop-nav" aria-label={t.header.mainNav} data-build="text">
+          {SECTION_IDS.map(id => (
+            <a key={id} href={sectionHref(id)} className="nav-link">{t.header.sections[id]}</a>
           ))}
         </nav>
         <div className="header-end">
+          <LanguageSwitch className="header-language" />
           <Button ref={contactButtonRef} type="button" size="sm" className="header-contact" data-build="button" aria-expanded={contactOpen} aria-controls="contacto" onClick={toggleContact}>
-            Contactarnos
+            {t.header.contactButton}
             <Icon name={contactOpen ? 'x' : 'plus'} size={16} />
           </Button>
-          <Button type="button" size="icon" className="menu-button" data-build="button" aria-expanded={menuOpen} aria-controls="mobile-menu" aria-label={menuOpen ? 'Cerrar menú' : 'Abrir menú'} onClick={toggleMenu}>
+          <Button type="button" size="icon" className="menu-button" data-build="button" aria-expanded={menuOpen} aria-controls="mobile-menu" aria-label={menuOpen ? t.header.closeMenu : t.header.openMenu} onClick={toggleMenu}>
             <Icon name={menuOpen ? 'x' : 'menu'} />
           </Button>
         </div>
       </div>
       {menuOpen && (
-        <nav id="mobile-menu" className="mobile-menu" aria-label="Navegación móvil">
-          {sectionLinks.map(([id, label]) => (
+        <nav id="mobile-menu" className="mobile-menu" aria-label={t.header.mobileNav}>
+          {SECTION_IDS.map(id => (
             <a key={id} className="mobile-nav-link" href={sectionHref(id)} onClick={closeMenu}>
-              {label}
+              {t.header.sections[id]}
               <Icon name="arrow-up-right" />
             </a>
           ))}
-          <a className="mobile-nav-link" href="/security" onClick={closeMenu}>
-            Seguridad
+          <a className="mobile-nav-link" href={href('/security')} onClick={closeMenu}>
+            {t.header.security}
             <Icon name="arrow-up-right" />
           </a>
+          <LanguageSwitch className="mobile-language" />
         </nav>
       )}
       <ContactSection expanded={contactOpen} onClose={closeContact} />

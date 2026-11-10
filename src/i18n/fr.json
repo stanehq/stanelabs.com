@@ -1,0 +1,340 @@
+{
+  "meta": {
+    "socialImageAlt": "Stane : Cybersécurité. OPSEC. Confidentialité.",
+    "pages": {
+      "/": {
+        "title": "Stane : nous traitons votre vie privée avec rigueur",
+        "description": "Nous résolvons votre exposition numérique : cybersécurité, sécurité opérationnelle et protection des informations sensibles. Moins d'exposition. Plus de contrôle."
+      },
+      "/security": {
+        "title": "Stane : Divulgation responsable",
+        "description": "Canal de sécurité et consignes pour signaler de manière responsable d'éventuelles vulnérabilités chez Stane."
+      },
+      "/privacy": {
+        "title": "Stane : Confidentialité",
+        "description": "Informations sur le fonctionnement du contact, les ressources externes et la confidentialité du site de Stane."
+      },
+      "/tos": {
+        "title": "Stane : Conditions d'utilisation",
+        "description": "Conditions d'utilisation du site informatif de StaneLabs, un projet en préparation sans contractualisation en ligne."
+      },
+      "/purchase": {
+        "title": "Stane : Contractualisation",
+        "description": "État de la contractualisation chez StaneLabs : projet en préparation, sans achats, paiements ni commandes en ligne."
+      }
+    }
+  },
+  "common": {
+    "skipLink": "Aller au contenu",
+    "brandHome": "Stane, accueil",
+    "back": "Retour à Stane",
+    "backHome": "Retour à l'accueil"
+  },
+  "header": {
+    "mainNav": "Navigation principale",
+    "mobileNav": "Navigation mobile",
+    "sections": {
+      "servicios": "Spécialités",
+      "enfoque": "Notre méthode",
+      "contacto": "Contact"
+    },
+    "security": "Sécurité",
+    "contactButton": "Nous contacter",
+    "openMenu": "Ouvrir le menu",
+    "closeMenu": "Fermer le menu",
+    "language": "Langue"
+  },
+  "home": {
+    "heroTitle": [
+      "Vos données.",
+      "Votre identité.",
+      "Votre contrôle."
+    ],
+    "heroDescription": [
+      "Comprenez votre exposition.",
+      "Protégez ce qui compte, avec discernement."
+    ],
+    "heroCta": "Explorer les spécialités",
+    "servicesLabel": "SPÉCIALITÉS",
+    "servicesTitle": [
+      "Trois perspectives.",
+      "Une même défense."
+    ],
+    "serviceLink": "Parlons de ce domaine",
+    "services": {
+      "cyber": {
+        "title": "Cybersécurité",
+        "context": "Systèmes et accès",
+        "summary": "Identifiez votre exposition et décidez quoi protéger en premier.",
+        "items": [
+          "Actifs et configurations",
+          "Accès et privilèges",
+          "Préparation aux incidents"
+        ],
+        "deliverable": "Carte d'exposition et priorités."
+      },
+      "opsec": {
+        "title": "Sécurité opérationnelle",
+        "context": "Identité et communications",
+        "summary": "Réduisez votre empreinte et séparez les contextes qui ont besoin de limites.",
+        "items": [
+          "Empreinte numérique",
+          "Séparation des identités",
+          "Canaux et habitudes de travail"
+        ],
+        "deliverable": "Pratiques pour réduire l'exposition."
+      },
+      "data": {
+        "title": "Données sensibles",
+        "context": "Informations et autorisations",
+        "summary": "Contrôlez qui accède à vos informations et comment elles sont conservées.",
+        "items": [
+          "Classification et autorisations",
+          "Chiffrement et conservation",
+          "Suppression des informations"
+        ],
+        "deliverable": "Plan de protection de l'information."
+      }
+    },
+    "approachLabel": "NOTRE MÉTHODE · CE QUE VOUS RECEVEZ",
+    "approachTitle": "De votre contexte à un plan.",
+    "workflow": [
+      {
+        "title": "Votre contexte",
+        "text": "Nous convenons de ce qu'il faut protéger, du périmètre et des autorisations."
+      },
+      {
+        "title": "Vos priorités",
+        "text": "Un diagnostic clair de votre exposition et de son impact."
+      },
+      {
+        "title": "Votre prochaine étape",
+        "text": "Des mesures concrètes, ordonnées dans un plan d'action."
+      }
+    ],
+    "contactLabel": "CONTACT",
+    "contactTitle": [
+      "Votre demande,",
+      "la première étape."
+    ],
+    "contactLead": "Dites-nous ce que vous souhaitez protéger ou clarifier. Une description générale suffit pour commencer.",
+    "emailLabel": "Écrivez-nous directement",
+    "faqTitle": "Avant de nous écrire",
+    "faq": [
+      {
+        "question": "Par où commencer ?",
+        "answer": "Une préoccupation ou une description générale suffit. À partir de là, nous définissons ce qu'il convient d'examiner."
+      },
+      {
+        "question": "Que puis-je partager ?",
+        "answer": "Uniquement un contexte général. Le canal pour les mots de passe, les documents et autres détails sensibles est convenu au préalable."
+      },
+      {
+        "question": "Vous avez trouvé une vulnérabilité ?",
+        "answer": "Écrivez à {email} avec l'URL et les étapes minimales pour la reproduire. Consultez d'abord la politique de sécurité.",
+        "link": {
+          "href": "/security",
+          "label": "Politique de sécurité"
+        }
+      }
+    ]
+  },
+  "footer": {
+    "security": "Sécurité",
+    "privacy": "Confidentialité",
+    "terms": "Conditions",
+    "purchase": "Contractualisation"
+  },
+  "contact": {
+    "title": "Votre demande",
+    "close": "Fermer le formulaire",
+    "nameLabel": "Votre nom",
+    "namePlaceholder": "Comment vous appelez-vous",
+    "emailLabel": "E-mail de contact",
+    "emailPlaceholder": "vous@exemple.com",
+    "topicLabel": "Sur quel sujet souhaitez-vous nous consulter ?",
+    "messageLabel": "Un peu de contexte",
+    "messagePlaceholder": "Ce qui vous préoccupe et ce que vous aimeriez clarifier. N'incluez ni mots de passe, ni clés, ni données de tiers.",
+    "notes": {
+      "direct": "Votre demande sera envoyée à Stane par e-mail. Ne partagez que des informations générales.",
+      "checking": "Vérification du canal de contact. Vous pouvez commencer à préparer votre demande.",
+      "draft": "Le formulaire prépare un brouillon dans votre application de messagerie. Relisez-le et envoyez-le depuis celle-ci ; il n'est pas envoyé automatiquement."
+    },
+    "submit": {
+      "pending": "Envoi…",
+      "checking": "Vérification du canal…",
+      "direct": "Envoyer la demande",
+      "draft": "Préparer la demande"
+    },
+    "results": {
+      "accepted": "Le serveur de messagerie a accepté votre demande. Cela ne confirme pas son arrivée dans la boîte de réception ; conservez une copie si vous devez en assurer le suivi.",
+      "failed": "Nous n'avons pas pu confirmer l'envoi. Nous avons préparé une copie pour que vous puissiez l'envoyer depuis votre application de messagerie.",
+      "draftReady": "Votre brouillon est prêt. Ouvrez-le pour le relire et l'envoyer depuis votre application de messagerie.",
+      "openDraft": "Ouvrir le brouillon"
+    },
+    "privacyNote": "Découvrez comment les informations sont traitées dans la [note de confidentialité](/privacy).",
+    "noscript": "Pour nous contacter sans JavaScript, écrivez à {email} depuis votre application de messagerie. Ne partagez que des informations générales.",
+    "topics": {
+      "general": "Demande initiale",
+      "cyber": "Cybersécurité",
+      "opsec": "Sécurité opérationnelle",
+      "data": "Données sensibles"
+    },
+    "draft": {
+      "name": "Nom",
+      "email": "E-mail de contact",
+      "area": "Domaine"
+    }
+  },
+  "notFound": {
+    "label": "404 / PAGE INTROUVABLE",
+    "title": "Cet endroit est hors de portée.",
+    "text": "L'adresse n'existe pas ou a changé."
+  },
+  "legal": {
+    "updated": "Dernière mise à jour : 13 octobre 2026",
+    "pages": {
+      "/privacy": {
+        "label": "CONFIDENTIALITÉ",
+        "title": "Vos informations, en contexte.",
+        "lead": "Informations sur la navigation et le contact pendant la phase de préparation de StaneLabs.",
+        "sections": [
+          {
+            "title": "Un projet en préparation",
+            "paragraphs": [
+              "StaneLabs n'est pas encore constitué en entité et ce site est à caractère informatif. Avant le début de toute activité commerciale, l'identité et les coordonnées du titulaire seront publiées, ainsi que l'avis de confidentialité complet. Pour toute question sur cette version, vous pouvez écrire à {email}."
+            ]
+          },
+          {
+            "title": "Ce qui se passe lorsque vous naviguez",
+            "paragraphs": [
+              "Le site n'intègre ni outils publicitaires, ni outils d'analyse, ni cookies de suivi propres. Les polices et les ressources de la page sont servies depuis la même origine.",
+              "Pour fournir les pages et protéger le service, l'hébergeur et, le cas échéant, le fournisseur réseau peuvent traiter des données techniques telles que l'adresse IP, l'URL demandée et la date d'accès. Cette note n'affirme pas que l'hébergement ne conserve aucun journal ni que la navigation est anonyme."
+            ]
+          },
+          {
+            "title": "Ce qui se passe lorsque vous nous contactez",
+            "paragraphs": [
+              "Ne partagez que votre nom, une adresse e-mail de réponse et une description générale de votre demande. N'envoyez ni mots de passe, ni clés, ni documents confidentiels, ni données personnelles de tiers.",
+              "Si le formulaire ouvre un brouillon, l'envoi dépend de votre application et de votre fournisseur de messagerie. S'il propose l'envoi direct, il transmet ces champs à l'API du site pour qu'ils soient remis par e-mail. L'application ne stocke pas les demandes dans une base de données ; le message peut rester dans les boîtes aux lettres et les services de messagerie concernés.",
+              "Le contenu d'une demande sert à y répondre et à assurer le suivi de ce que vous avez demandé. Il n'est pas utilisé pour vous abonner à des communications commerciales."
+            ]
+          },
+          {
+            "title": "Conservation et prestataires",
+            "paragraphs": [
+              "La conservation des messages et des journaux dépend de l'hébergement et de la messagerie utilisés. Avant l'ouverture du service au public, les prestataires, les durées de conservation, la base juridique et les éventuels transferts internationaux seront précisés. D'ici là, évitez de partager des informations sensibles par ce canal initial."
+            ]
+          },
+          {
+            "title": "Questions sur vos données",
+            "paragraphs": [
+              "Écrivez à {email} pour demander des informations sur une demande que vous avez envoyée, sa rectification ou sa suppression. Décrivez votre demande sans joindre d'emblée de pièce d'identité ; si une vérification est nécessaire, un moyen proportionné sera convenu. Cette note de phase informative ne remplace pas l'information complète du responsable, qui doit être publiée avant le lancement."
+            ]
+          }
+        ]
+      },
+      "/security": {
+        "label": "SÉCURITÉ",
+        "title": "Divulgation responsable.",
+        "lead": "Un canal clair pour signaler un éventuel problème de sécurité sur ce site.",
+        "sections": [
+          {
+            "title": "Comment signaler une découverte",
+            "paragraphs": [
+              "Écrivez à {email} en indiquant l'URL concernée, une description du problème, son impact possible et les étapes minimales pour le reproduire. Indiquez une adresse e-mail à laquelle nous pouvons répondre.",
+              "Partagez une preuve limitée et retirez des captures et des exemples les identifiants, les jetons et les données personnelles. Si le rapport nécessite des informations sensibles, convenez d'abord d'un canal adapté."
+            ]
+          },
+          {
+            "title": "Périmètre et limites",
+            "paragraphs": [
+              "Ce canal concerne le site stanelabs.com et ses services propres. Les systèmes de tiers, de prestataires ou de clients potentiels n'entrent pas dans ce périmètre.",
+              "Ces consignes n'autorisent pas les tests intrusifs. Ne réalisez ni déni de service, ni ingénierie sociale, ni envoi massif de messages, ni extraction de données, ni accès aux comptes d'autrui. Si vous tombez sur des informations concernant une autre personne, arrêtez-vous et signalez la découverte sans la copier ni la modifier."
+            ]
+          },
+          {
+            "title": "Suivi du rapport",
+            "paragraphs": [
+              "L'échange permet d'examiner le problème et de convenir des prochaines étapes. Aucun délai de réponse, aucune récompense ni aucun programme de bug bounty n'est promis. Évitez de publier des détails permettant d'exploiter la faille pendant que son examen est coordonné."
+            ]
+          },
+          {
+            "title": "Informations sur le canal",
+            "paragraphs": [
+              "Le fichier [security.txt](/.well-known/security.txt) indique le contact et l'emplacement de cette politique. La langue de prise en charge indiquée est l'espagnol. Ce canal n'est ni un service d'urgence ni un service de réponse aux incidents de tiers."
+            ]
+          }
+        ]
+      },
+      "/tos": {
+        "label": "CONDITIONS D'UTILISATION",
+        "title": "Un périmètre clair dès le départ.",
+        "lead": "Conditions de consultation de cette version informative de StaneLabs, un projet encore en préparation.",
+        "sections": [
+          {
+            "title": "Ce que propose cette version",
+            "paragraphs": [
+              "Le site présente des domaines d'intervention, une méthodologie et des exemples illustratifs. StaneLabs n'est pas encore constitué et cette version ne propose pas de contractualisation en ligne. Naviguer, ouvrir un brouillon ou envoyer une demande ne crée ni contrat ni relation de conseil professionnel."
+            ]
+          },
+          {
+            "title": "Utilisation du site",
+            "paragraphs": [
+              "Utilisez la page et ses canaux de contact de manière licite et respectueuse. Ne saisissez pas de données de tiers sans autorisation, n'essayez pas d'accéder aux comptes ou systèmes d'autrui et n'entravez pas la disponibilité du service. Le signalement d'éventuelles vulnérabilités est décrit dans la [politique de sécurité](/security)."
+            ]
+          },
+          {
+            "title": "Contenu et exemples",
+            "paragraphs": [
+              "Les exemples de livrables sont des démonstrations de format ; ils ne représentent pas des travaux de clients et ne garantissent aucun résultat. Les informations générales du site ne remplacent pas une évaluation de votre environnement. Tout travail futur nécessitera un périmètre, une autorisation et des conditions convenus par écrit."
+            ]
+          },
+          {
+            "title": "Éléments du site",
+            "paragraphs": [
+              "Les textes, le design et les ressources propres sont présentés pour consultation. Les ressources de tiers conservent leurs licences respectives. La présence d'une marque ou d'une ressource n'implique ni certification, ni affiliation, ni autorisation de la réutiliser au-delà de ce que permet son titulaire."
+            ]
+          },
+          {
+            "title": "Contact et modifications",
+            "paragraphs": [
+              "Pour signaler un problème ou clarifier une condition, écrivez à {email}. Les conditions seront mises à jour lorsque le titulaire sera identifié et que l'activité commerciale sera définie. Vous pouvez consulter l'état de la contractualisation dans [contractualisation et achats](/purchase) et le fonctionnement du contact dans la [note de confidentialité](/privacy)."
+            ]
+          }
+        ]
+      },
+      "/purchase": {
+        "label": "CONTRACTUALISATION ET ACHATS",
+        "title": "Nous n'acceptons pas encore d'achats.",
+        "lead": "StaneLabs est en préparation. Cette version ne comporte ni produits à la vente, ni passerelle de paiement, ni contractualisation en ligne.",
+        "sections": [
+          {
+            "title": "Le premier contact est informatif",
+            "paragraphs": [
+              "Vous pouvez exposer un besoin général par e-mail. Cet échange ne constitue ni une réservation, ni une commande, ni l'acceptation d'une offre. Aucun paiement n'est demandé depuis ce site."
+            ]
+          },
+          {
+            "title": "Avant de proposer un service",
+            "paragraphs": [
+              "Le titulaire ainsi que ses données fiscales et de contact seront identifiés. Une proposition devra détailler le périmètre, les autorisations nécessaires, les livrables, les délais, le prix et les taxes applicables, ainsi que les conditions de paiement et d'annulation et les droits applicables. D'ici là, aucun achat n'est formalisé via cette page."
+            ]
+          },
+          {
+            "title": "Paiements et données sensibles",
+            "paragraphs": [
+              "N'envoyez ni données de carte, ni pièces d'identité, ni clés d'accès, ni acomptes à partir de cette page. Si vous recevez une demande de paiement prétendant émaner de StaneLabs, vérifiez-la par un canal connu avant d'agir."
+            ]
+          },
+          {
+            "title": "Où se renseigner",
+            "paragraphs": [
+              "Pour toute question sur cette phase, écrivez à {email}. Consultez aussi les [conditions d'utilisation](/tos) et la [note de confidentialité](/privacy)."
+            ]
+          }
+        ]
+      }
+    }
+  }
+}

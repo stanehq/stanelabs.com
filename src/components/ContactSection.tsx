@@ -2,16 +2,21 @@
 
 import { useEffect, useRef, useState, useSyncExternalStore, type FormEvent } from 'react';
 import config from '../../project-config.json';
+import { useI18n } from '../i18n/I18nProvider';
+import { Rich } from '../i18n/Rich';
+import type { Messages } from '../i18n/messages';
 import { CONTACT_TOPIC_EVENT } from '../lib/events';
 import { Icon } from './Icon';
 import { Button } from './ui/button';
 import { Input, Textarea } from './ui/input';
 
 const contactApiUrl = (process.env.NEXT_PUBLIC_CONTACT_API_URL || '').replace(/\/$/, '');
-const topics = ['Consulta inicial', 'Ciberseguridad', 'Seguridad operativa', 'Datos sensibles'] as const;
-type Topic = typeof topics[number];
-const defaultTopic: Topic = topics[0];
-const isTopic = (value: unknown): value is Topic => topics.some(topic => topic === value);
+const TOPIC_KEYS = ['general', 'cyber', 'opsec', 'data'] as const;
+type Topic = (typeof TOPIC_KEYS)[number];
+const defaultTopic: Topic = 'general';
+const isTopic = (value: unknown): value is Topic => TOPIC_KEYS.some(topic => topic === value);
+/** Topic names the API accepts; they stay in Spanish whatever the language of the site. */
+const API_TOPICS: Record<Topic, string> = { general: 'Consulta inicial', cyber: 'Ciberseguridad', opsec: 'Seguridad operativa', data: 'Datos sensibles' };
 type DeliveryMode = 'waiting' | 'checking' | 'direct' | 'draft';
 
 // useSyncExternalStore reports false on the server and true once hydrated,
@@ -20,12 +25,15 @@ const subscribeHydration = () => () => {};
 const clientSnapshot = () => true;
 const serverSnapshot = () => false;
 
-function prepareDraft(values: FormData, topic: string) {
-  const body = `Nombre: ${values.get('name')}\nCorreo de contacto: ${values.get('email')}\nÁrea: ${topic}\n\n${values.get('message')}`;
-  return `mailto:${config.contactEmail}?subject=${encodeURIComponent(`Stane: ${topic}`)}&body=${encodeURIComponent(body)}`;
+function prepareDraft(values: FormData, topic: Topic, t: Messages['contact']) {
+  const label = t.topics[topic];
+  const body = `${t.draft.name}: ${values.get('name')}\n${t.draft.email}: ${values.get('email')}\n${t.draft.area}: ${label}\n\n${values.get('message')}`;
+  return `mailto:${config.contactEmail}?subject=${encodeURIComponent(`Stane: ${label}`)}&body=${encodeURIComponent(body)}`;
 }
 
 export default function ContactSection({ expanded, onClose }: { expanded: boolean; onClose: () => void }) {
+  const { t: messages } = useI18n();
+  const t = messages.contact;
   const sectionRef = useRef<HTMLDivElement>(null);
   const panelHeadingRef = useRef<HTMLHeadingElement>(null);
   const hydrated = useSyncExternalStore(subscribeHydration, clientSnapshot, serverSnapshot);
@@ -87,11 +95,12 @@ export default function ContactSection({ expanded, onClose }: { expanded: boolea
     event.preventDefault();
     if (!hydrated || pending || mode === 'waiting' || mode === 'checking') return;
     const values = new FormData(event.currentTarget);
-    const selectedTopic = String(values.get('topic') || defaultTopic);
+    const topicValue = values.get('topic');
+    const selectedTopic = isTopic(topicValue) ? topicValue : defaultTopic;
     setNotice('');
     setDraft('');
     if (mode !== 'direct') {
-      setDraft(prepareDraft(values, selectedTopic));
+      setDraft(prepareDraft(values, selectedTopic, t));
       return;
     }
     setPending(true);
@@ -100,60 +109,56 @@ export default function ContactSection({ expanded, onClose }: { expanded: boolea
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          name: values.get('name'), email: values.get('email'), topic: selectedTopic,
+          name: values.get('name'), email: values.get('email'), topic: API_TOPICS[selectedTopic],
           message: values.get('message'), website: values.get('website') || '',
         }),
         signal: AbortSignal.timeout(15000),
       });
       const result = await response.json();
       if (!response.ok || result.status !== 'sent') throw new Error('send-failed');
-      setNotice('El servidor de correo ha aceptado tu consulta. Esto no confirma su llegada al buzón; conserva una copia si necesitas hacer seguimiento.');
+      setNotice(t.results.accepted);
     } catch {
-      setNotice('No se pudo confirmar el envío. Hemos preparado una copia para que puedas enviarla desde tu aplicación de correo.');
-      setDraft(prepareDraft(values, selectedTopic));
+      setNotice(t.results.failed);
+      setDraft(prepareDraft(values, selectedTopic, t));
     } finally {
       setPending(false);
     }
   }
 
   const checking = mode === 'waiting' || mode === 'checking';
-  const deliveryNote = mode === 'direct'
-    ? 'La consulta se enviará a Stane por correo. Comparte solo información general.'
-    : checking
-      ? 'Comprobando el canal de contacto. Puedes ir preparando tu consulta.'
-      : 'El formulario prepara un borrador en tu aplicación de correo. Revísalo y envíalo allí; no se envía automáticamente.';
-  const submitLabel = pending ? 'Enviando…' : checking ? 'Comprobando canal…' : mode === 'direct' ? 'Enviar consulta' : 'Preparar consulta';
+  const deliveryNote = mode === 'direct' ? t.notes.direct : checking ? t.notes.checking : t.notes.draft;
+  const submitLabel = pending ? t.submit.pending : checking ? t.submit.checking : mode === 'direct' ? t.submit.direct : t.submit.draft;
 
   return (
     <div ref={sectionRef} id="contacto" className="contact-dropdown" data-open={expanded} inert={!expanded} aria-hidden={!expanded} aria-labelledby="consultation-heading" role="region">
       <div className="contact-dropdown-clip">
         <div className="contact-panel">
           <div className="contact-panel-heading">
-            <h3 id="consultation-heading" ref={panelHeadingRef} tabIndex={-1}>Tu consulta</h3>
-            <button type="button" className="contact-close" onClick={onClose} aria-label="Cerrar formulario"><Icon name="x" size={20} /></button>
+            <h3 id="consultation-heading" ref={panelHeadingRef} tabIndex={-1}>{t.title}</h3>
+            <button type="button" className="contact-close" onClick={onClose} aria-label={t.close}><Icon name="x" size={20} /></button>
           </div>
           <form className="contact-form" onSubmit={submit} method="post" aria-describedby="contact-delivery-note">
             <fieldset className="contact-fieldset" disabled={!hydrated || pending}>
               <input name="website" type="text" tabIndex={-1} autoComplete="off" aria-hidden="true" className="honeypot" />
               <div className="form-grid">
                 <label className="field">
-                  <span className="field-label">Tu nombre</span>
-                  <Input name="name" placeholder="Cómo te llamas" autoComplete="name" required maxLength={100} />
+                  <span className="field-label">{t.nameLabel}</span>
+                  <Input name="name" placeholder={t.namePlaceholder} autoComplete="name" required maxLength={100} />
                 </label>
                 <label className="field">
-                  <span className="field-label">Correo de contacto</span>
-                  <Input name="email" type="email" placeholder="tu@correo.com" autoComplete="email" required maxLength={180} />
+                  <span className="field-label">{t.emailLabel}</span>
+                  <Input name="email" type="email" placeholder={t.emailPlaceholder} autoComplete="email" required maxLength={180} />
                 </label>
               </div>
               <label className="field">
-                <span className="field-label">¿Sobre qué quieres consultar?</span>
+                <span className="field-label">{t.topicLabel}</span>
                 <select name="topic" value={topic} onChange={event => { if (isTopic(event.target.value)) setTopic(event.target.value); }}>
-                  {topics.map(value => <option key={value}>{value}</option>)}
+                  {TOPIC_KEYS.map(key => <option key={key} value={key}>{t.topics[key]}</option>)}
                 </select>
               </label>
               <label className="field">
-                <span className="field-label">Un poco de contexto</span>
-                <Textarea name="message" placeholder="Qué te preocupa y qué te gustaría aclarar. No incluyas contraseñas, claves ni datos de terceros." required maxLength={2000} rows={4} />
+                <span className="field-label">{t.messageLabel}</span>
+                <Textarea name="message" placeholder={t.messagePlaceholder} required maxLength={2000} rows={4} />
               </label>
               <p id="contact-delivery-note" className="form-note"><Icon name="lock" size={16} />{deliveryNote}</p>
               <Button type="submit" className="form-action" disabled={checking || pending}>
@@ -164,13 +169,13 @@ export default function ContactSection({ expanded, onClose }: { expanded: boolea
             {notice && <p className="form-result" role="status">{notice}</p>}
             {draft && (
               <div className="form-result" role="status">
-                <p>Tu borrador está preparado. Ábrelo para revisarlo y enviarlo desde tu aplicación de correo.</p>
-                <a className="contact-draft-link" href={draft}>Abrir borrador<Icon name="external-link" size={16} /></a>
+                <p>{t.results.draftReady}</p>
+                <a className="contact-draft-link" href={draft}>{t.results.openDraft}<Icon name="external-link" size={16} /></a>
               </div>
             )}
-            <p className="form-note">Consulta cómo se trata la información en la <a href="/privacy">nota de privacidad</a>.</p>
+            <p className="form-note"><Rich text={t.privacyNote} email={config.contactEmail} /></p>
             <noscript>
-              <p className="contact-noscript">Para contactar sin JavaScript, escribe a <a href={`mailto:${config.contactEmail}`}>{config.contactEmail}</a> desde tu aplicación de correo. Comparte solo información general.</p>
+              <p className="contact-noscript"><Rich text={t.noscript} email={config.contactEmail} /></p>
             </noscript>
           </form>
         </div>

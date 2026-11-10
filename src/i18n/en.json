@@ -1,0 +1,340 @@
+{
+  "meta": {
+    "socialImageAlt": "Stane: Cybersecurity. OPSEC. Privacy.",
+    "pages": {
+      "/": {
+        "title": "Stane: we treat your privacy with rigor",
+        "description": "We resolve your digital exposure: cybersecurity, operational security and protection of sensitive information. Less exposure. More control."
+      },
+      "/security": {
+        "title": "Stane: Responsible disclosure",
+        "description": "Security channel and guidelines to responsibly report possible vulnerabilities in Stane."
+      },
+      "/privacy": {
+        "title": "Stane: Privacy",
+        "description": "How contact, external resources and privacy work on the Stane site."
+      },
+      "/tos": {
+        "title": "Stane: Terms of use",
+        "description": "Terms of use for the informational StaneLabs site, a project in preparation with no online contracting."
+      },
+      "/purchase": {
+        "title": "Stane: Contracting",
+        "description": "Contracting status at StaneLabs: a project in preparation, with no online purchases, payments or orders."
+      }
+    }
+  },
+  "common": {
+    "skipLink": "Skip to content",
+    "brandHome": "Stane, home",
+    "back": "Back to Stane",
+    "backHome": "Back to home"
+  },
+  "header": {
+    "mainNav": "Main navigation",
+    "mobileNav": "Mobile navigation",
+    "sections": {
+      "servicios": "Specialties",
+      "enfoque": "How we work",
+      "contacto": "Contact"
+    },
+    "security": "Security",
+    "contactButton": "Contact us",
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu",
+    "language": "Language"
+  },
+  "home": {
+    "heroTitle": [
+      "Your data.",
+      "Your identity.",
+      "Your control."
+    ],
+    "heroDescription": [
+      "Understand your exposure.",
+      "Protect what matters, with sound judgment."
+    ],
+    "heroCta": "Explore specialties",
+    "servicesLabel": "SPECIALTIES",
+    "servicesTitle": [
+      "Three perspectives.",
+      "One defense."
+    ],
+    "serviceLink": "Let's talk about this area",
+    "services": {
+      "cyber": {
+        "title": "Cybersecurity",
+        "context": "Systems and access",
+        "summary": "Identify your exposure and decide what to protect first.",
+        "items": [
+          "Assets and configurations",
+          "Access and privileges",
+          "Incident readiness"
+        ],
+        "deliverable": "Exposure map and priorities."
+      },
+      "opsec": {
+        "title": "Operational security",
+        "context": "Identity and communications",
+        "summary": "Reduce your footprint and separate the contexts that need boundaries.",
+        "items": [
+          "Digital footprint",
+          "Identity separation",
+          "Channels and work habits"
+        ],
+        "deliverable": "Practices to reduce exposure."
+      },
+      "data": {
+        "title": "Sensitive data",
+        "context": "Information and permissions",
+        "summary": "Control who can access your information and how it is kept.",
+        "items": [
+          "Classification and permissions",
+          "Encryption and retention",
+          "Information disposal"
+        ],
+        "deliverable": "Information protection plan."
+      }
+    },
+    "approachLabel": "HOW WE WORK · WHAT YOU GET",
+    "approachTitle": "From your context to a plan.",
+    "workflow": [
+      {
+        "title": "Your context",
+        "text": "We agree on what to protect, the scope and the authorizations."
+      },
+      {
+        "title": "Your priorities",
+        "text": "A clear diagnosis of your exposure and its impact."
+      },
+      {
+        "title": "Your next step",
+        "text": "Concrete measures, ordered into an action plan."
+      }
+    ],
+    "contactLabel": "CONTACT",
+    "contactTitle": [
+      "Your inquiry,",
+      "the first step."
+    ],
+    "contactLead": "Tell us what you want to protect or clarify. A general description is enough to get started.",
+    "emailLabel": "Write to us directly",
+    "faqTitle": "Before you write to us",
+    "faq": [
+      {
+        "question": "Where do I start?",
+        "answer": "A concern or a general description is enough. From there, we define what is worth reviewing."
+      },
+      {
+        "question": "What can I share?",
+        "answer": "Only general context. The channel for passwords, documents and other sensitive details is agreed beforehand."
+      },
+      {
+        "question": "Have you found a vulnerability?",
+        "answer": "Write to {email} with the URL and the minimum steps to reproduce it. Please read the security policy first.",
+        "link": {
+          "href": "/security",
+          "label": "Security policy"
+        }
+      }
+    ]
+  },
+  "footer": {
+    "security": "Security",
+    "privacy": "Privacy",
+    "terms": "Terms",
+    "purchase": "Contracting"
+  },
+  "contact": {
+    "title": "Your inquiry",
+    "close": "Close form",
+    "nameLabel": "Your name",
+    "namePlaceholder": "What should we call you",
+    "emailLabel": "Contact email",
+    "emailPlaceholder": "you@email.com",
+    "topicLabel": "What would you like to ask about?",
+    "messageLabel": "A bit of context",
+    "messagePlaceholder": "What worries you and what you would like to clarify. Do not include passwords, keys or third-party data.",
+    "notes": {
+      "direct": "Your inquiry will be sent to Stane by email. Share general information only.",
+      "checking": "Checking the contact channel. You can start preparing your inquiry.",
+      "draft": "The form prepares a draft in your email app. Review and send it there; it is not sent automatically."
+    },
+    "submit": {
+      "pending": "Sending…",
+      "checking": "Checking channel…",
+      "direct": "Send inquiry",
+      "draft": "Prepare inquiry"
+    },
+    "results": {
+      "accepted": "The mail server has accepted your inquiry. This does not confirm it reached the inbox; keep a copy if you need to follow up.",
+      "failed": "We could not confirm delivery. We have prepared a copy so you can send it from your email app.",
+      "draftReady": "Your draft is ready. Open it to review and send it from your email app.",
+      "openDraft": "Open draft"
+    },
+    "privacyNote": "See how information is handled in the [privacy notice](/privacy).",
+    "noscript": "To get in touch without JavaScript, write to {email} from your email app. Share general information only.",
+    "topics": {
+      "general": "Initial inquiry",
+      "cyber": "Cybersecurity",
+      "opsec": "Operational security",
+      "data": "Sensitive data"
+    },
+    "draft": {
+      "name": "Name",
+      "email": "Contact email",
+      "area": "Area"
+    }
+  },
+  "notFound": {
+    "label": "404 / PAGE NOT FOUND",
+    "title": "This place is out of reach.",
+    "text": "The address does not exist or has changed."
+  },
+  "legal": {
+    "updated": "Last updated: October 13, 2026",
+    "pages": {
+      "/privacy": {
+        "label": "PRIVACY",
+        "title": "Your information, in context.",
+        "lead": "Information about browsing and contact during StaneLabs' preparation phase.",
+        "sections": [
+          {
+            "title": "A project in preparation",
+            "paragraphs": [
+              "StaneLabs is not yet incorporated as an entity and this site is informational. Before any commercial activity begins, the owner's identity and contact details will be published, along with the full privacy notice. For questions about this version, you can write to {email}."
+            ]
+          },
+          {
+            "title": "What happens when you browse",
+            "paragraphs": [
+              "The site includes no advertising or analytics tools and no tracking cookies of its own. The page's fonts and resources are served from the same origin.",
+              "To deliver the pages and protect the service, the hosting provider and, if one is used, the network provider may process technical data such as the IP address, the requested URL and the access date. This notice does not claim that hosting keeps no logs or that browsing is anonymous."
+            ]
+          },
+          {
+            "title": "What happens when you get in touch",
+            "paragraphs": [
+              "Share only your name, a reply email address and a general description of your inquiry. Do not send passwords, keys, confidential documents or third parties' personal data.",
+              "If the form opens a draft, sending depends on your email app and provider. If it offers direct sending, it transmits those fields to the site's API so they can be delivered by email. The application does not store inquiries in a database; the message may remain in the mailboxes and email services involved.",
+              "The content of an inquiry is used to answer it and to follow up on what you requested. It is not used to subscribe you to commercial communications."
+            ]
+          },
+          {
+            "title": "Retention and providers",
+            "paragraphs": [
+              "The retention of messages and logs depends on the hosting and email used. Before the service opens to the public, the providers, retention periods, legal basis and any international transfers will be specified. Meanwhile, avoid sharing sensitive information through this initial channel."
+            ]
+          },
+          {
+            "title": "Questions about your data",
+            "paragraphs": [
+              "Write to {email} to request information about an inquiry you have sent, or its correction or deletion. Describe your request without attaching identity documents upfront; if verification is needed, a proportionate means will be agreed. This informational-phase notice does not replace the controller's full information, which must be published before launch."
+            ]
+          }
+        ]
+      },
+      "/security": {
+        "label": "SECURITY",
+        "title": "Responsible disclosure.",
+        "lead": "A clear channel to report a possible security issue on this site.",
+        "sections": [
+          {
+            "title": "How to report a finding",
+            "paragraphs": [
+              "Write to {email} with the affected URL, a description of the problem, its possible impact and the minimum steps to reproduce it. Include an email address we can reply to.",
+              "Share limited proof and remove credentials, tokens and personal data from screenshots and examples. If the report needs sensitive information, agree on a suitable channel first."
+            ]
+          },
+          {
+            "title": "Scope and limits",
+            "paragraphs": [
+              "This channel covers the stanelabs.com site and its own services. Third-party systems, providers or prospective clients are not part of that scope.",
+              "These guidelines do not authorize intrusive testing. Do not perform denial of service, social engineering, mass messaging, data extraction or access to other people's accounts. If you come across another person's information, stop and report the finding without copying or altering it."
+            ]
+          },
+          {
+            "title": "Report follow-up",
+            "paragraphs": [
+              "The communication allows us to review the problem and agree on next steps. No response time, reward or bug bounty program is promised. Avoid publishing details that would allow the flaw to be exploited while its review is being coordinated."
+            ]
+          },
+          {
+            "title": "Channel details",
+            "paragraphs": [
+              "The [security.txt](/.well-known/security.txt) file lists the contact and the location of this policy. The stated support language is Spanish. This channel is not an emergency service or a response service for third-party incidents."
+            ]
+          }
+        ]
+      },
+      "/tos": {
+        "label": "TERMS OF USE",
+        "title": "A clear scope from the start.",
+        "lead": "Terms for browsing this informational version of StaneLabs, a project still in preparation.",
+        "sections": [
+          {
+            "title": "What this version offers",
+            "paragraphs": [
+              "The site presents areas of work, a methodology and illustrative examples. StaneLabs is not yet incorporated and this version offers no online contracting. Browsing, opening a draft or sending an inquiry does not create a contract or a professional advisory relationship."
+            ]
+          },
+          {
+            "title": "Use of the site",
+            "paragraphs": [
+              "Use the page and its contact channels lawfully and respectfully. Do not enter third-party data without authorization, do not try to access other people's accounts or systems and do not interfere with the availability of the service. Reporting possible vulnerabilities is described in the [security policy](/security)."
+            ]
+          },
+          {
+            "title": "Content and examples",
+            "paragraphs": [
+              "The deliverable examples are format demonstrations; they do not represent client work or guarantee results. The site's general information does not replace an assessment of your environment. Any future work will require a scope, an authorization and conditions agreed in writing."
+            ]
+          },
+          {
+            "title": "Site materials",
+            "paragraphs": [
+              "The texts, design and own resources are presented for browsing. Third-party resources keep their respective licenses. The presence of a brand or a resource does not imply certification, affiliation or permission to reuse it beyond what its owner allows."
+            ]
+          },
+          {
+            "title": "Contact and changes",
+            "paragraphs": [
+              "To report a problem or clarify a condition, write to {email}. The conditions will be updated when the owner is identified and the commercial activity is defined. You can check the contracting status in [contracting and purchases](/purchase) and how contact works in the [privacy notice](/privacy)."
+            ]
+          }
+        ]
+      },
+      "/purchase": {
+        "label": "CONTRACTING AND PURCHASES",
+        "title": "We do not accept purchases yet.",
+        "lead": "StaneLabs is in preparation. There are no products for sale, payment gateway or online contracting in this version.",
+        "sections": [
+          {
+            "title": "First contact is informational",
+            "paragraphs": [
+              "You can raise a general need by email. That conversation is not a booking, an order or the acceptance of an offer. No payment is requested from this site."
+            ]
+          },
+          {
+            "title": "Before offering a service",
+            "paragraphs": [
+              "The owner and their tax and contact details will be identified. A proposal must detail the scope, the necessary authorizations, the deliverables, the deadlines, the price and the applicable taxes, as well as the payment and cancellation conditions and any applicable rights. Until then, no purchases are formalized through this page."
+            ]
+          },
+          {
+            "title": "Payments and sensitive data",
+            "paragraphs": [
+              "Do not send card details, identity documents, access keys or advance payments based on this page. If you receive a payment request claiming to come from StaneLabs, verify it through a known channel before acting."
+            ]
+          },
+          {
+            "title": "Where to look",
+            "paragraphs": [
+              "For questions about this phase, write to {email}. See also the [terms of use](/tos) and the [privacy notice](/privacy)."
+            ]
+          }
+        ]
+      }
+    }
+  }
+}

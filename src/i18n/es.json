@@ -1,0 +1,340 @@
+{
+  "meta": {
+    "socialImageAlt": "Stane: Ciberseguridad. OPSEC. Privacidad.",
+    "pages": {
+      "/": {
+        "title": "Stane: tratamos tu privacidad con rigor",
+        "description": "Resolvemos tu exposición digital: ciberseguridad, seguridad operativa y protección de información sensible. Menos exposición. Más control."
+      },
+      "/security": {
+        "title": "Stane: Divulgación responsable",
+        "description": "Canal de seguridad y pautas para comunicar responsablemente posibles vulnerabilidades en Stane."
+      },
+      "/privacy": {
+        "title": "Stane: Privacidad",
+        "description": "Información sobre el funcionamiento del contacto, los recursos externos y la privacidad del sitio de Stane."
+      },
+      "/tos": {
+        "title": "Stane: Condiciones de uso",
+        "description": "Condiciones de uso del sitio informativo de StaneLabs, un proyecto en preparación sin contratación online."
+      },
+      "/purchase": {
+        "title": "Stane: Contratación",
+        "description": "Estado de la contratación en StaneLabs: proyecto en preparación, sin compras, pagos ni pedidos online."
+      }
+    }
+  },
+  "common": {
+    "skipLink": "Saltar al contenido",
+    "brandHome": "Stane, inicio",
+    "back": "Volver a Stane",
+    "backHome": "Volver al inicio"
+  },
+  "header": {
+    "mainNav": "Navegación principal",
+    "mobileNav": "Navegación móvil",
+    "sections": {
+      "servicios": "Especialidades",
+      "enfoque": "Cómo trabajamos",
+      "contacto": "Contacto"
+    },
+    "security": "Seguridad",
+    "contactButton": "Contactarnos",
+    "openMenu": "Abrir menú",
+    "closeMenu": "Cerrar menú",
+    "language": "Idioma"
+  },
+  "home": {
+    "heroTitle": [
+      "Tus datos.",
+      "Tu identidad.",
+      "Tu control."
+    ],
+    "heroDescription": [
+      "Entiende tu exposición.",
+      "Protege lo que importa, con criterio."
+    ],
+    "heroCta": "Explorar especialidades",
+    "servicesLabel": "ESPECIALIDADES",
+    "servicesTitle": [
+      "Tres perspectivas.",
+      "Una misma defensa."
+    ],
+    "serviceLink": "Hablemos de esta área",
+    "services": {
+      "cyber": {
+        "title": "Ciberseguridad",
+        "context": "Sistemas y accesos",
+        "summary": "Identifica tu exposición y decide qué proteger primero.",
+        "items": [
+          "Activos y configuraciones",
+          "Accesos y privilegios",
+          "Preparación ante incidentes"
+        ],
+        "deliverable": "Mapa de exposición y prioridades."
+      },
+      "opsec": {
+        "title": "Seguridad operativa",
+        "context": "Identidad y comunicaciones",
+        "summary": "Reduce tu huella y separa los contextos que necesitan límites.",
+        "items": [
+          "Huella digital",
+          "Separación de identidades",
+          "Canales y hábitos de trabajo"
+        ],
+        "deliverable": "Prácticas para reducir la exposición."
+      },
+      "data": {
+        "title": "Datos sensibles",
+        "context": "Información y permisos",
+        "summary": "Controla quién accede a tu información y cómo se conserva.",
+        "items": [
+          "Clasificación y permisos",
+          "Cifrado y conservación",
+          "Eliminación de información"
+        ],
+        "deliverable": "Plan de protección de la información."
+      }
+    },
+    "approachLabel": "CÓMO TRABAJAMOS · QUÉ RECIBES",
+    "approachTitle": "De tu contexto a un plan.",
+    "workflow": [
+      {
+        "title": "Tu contexto",
+        "text": "Acordamos qué proteger, el alcance y las autorizaciones."
+      },
+      {
+        "title": "Tus prioridades",
+        "text": "Un diagnóstico claro de la exposición y su impacto."
+      },
+      {
+        "title": "Tu siguiente paso",
+        "text": "Medidas concretas, ordenadas en un plan de acción."
+      }
+    ],
+    "contactLabel": "CONTACTO",
+    "contactTitle": [
+      "Tu consulta,",
+      "el primer paso."
+    ],
+    "contactLead": "Cuéntanos qué quieres proteger o aclarar. Una descripción general es suficiente para empezar.",
+    "emailLabel": "Escríbenos directamente",
+    "faqTitle": "Antes de escribirnos",
+    "faq": [
+      {
+        "question": "¿Por dónde empiezo?",
+        "answer": "Una preocupación o una descripción general basta. A partir de ahí, definimos qué conviene revisar."
+      },
+      {
+        "question": "¿Qué puedo compartir?",
+        "answer": "Solo contexto general. El canal para contraseñas, documentos y otros detalles sensibles se acuerda antes."
+      },
+      {
+        "question": "¿Has encontrado una vulnerabilidad?",
+        "answer": "Escribe a {email} con la URL y pasos mínimos para reproducirla. Consulta primero la política de seguridad.",
+        "link": {
+          "href": "/security",
+          "label": "Política de seguridad"
+        }
+      }
+    ]
+  },
+  "footer": {
+    "security": "Seguridad",
+    "privacy": "Privacidad",
+    "terms": "Términos",
+    "purchase": "Contratación"
+  },
+  "contact": {
+    "title": "Tu consulta",
+    "close": "Cerrar formulario",
+    "nameLabel": "Tu nombre",
+    "namePlaceholder": "Cómo te llamas",
+    "emailLabel": "Correo de contacto",
+    "emailPlaceholder": "tu@correo.com",
+    "topicLabel": "¿Sobre qué quieres consultar?",
+    "messageLabel": "Un poco de contexto",
+    "messagePlaceholder": "Qué te preocupa y qué te gustaría aclarar. No incluyas contraseñas, claves ni datos de terceros.",
+    "notes": {
+      "direct": "La consulta se enviará a Stane por correo. Comparte solo información general.",
+      "checking": "Comprobando el canal de contacto. Puedes ir preparando tu consulta.",
+      "draft": "El formulario prepara un borrador en tu aplicación de correo. Revísalo y envíalo allí; no se envía automáticamente."
+    },
+    "submit": {
+      "pending": "Enviando…",
+      "checking": "Comprobando canal…",
+      "direct": "Enviar consulta",
+      "draft": "Preparar consulta"
+    },
+    "results": {
+      "accepted": "El servidor de correo ha aceptado tu consulta. Esto no confirma su llegada al buzón; conserva una copia si necesitas hacer seguimiento.",
+      "failed": "No se pudo confirmar el envío. Hemos preparado una copia para que puedas enviarla desde tu aplicación de correo.",
+      "draftReady": "Tu borrador está preparado. Ábrelo para revisarlo y enviarlo desde tu aplicación de correo.",
+      "openDraft": "Abrir borrador"
+    },
+    "privacyNote": "Consulta cómo se trata la información en la [nota de privacidad](/privacy).",
+    "noscript": "Para contactar sin JavaScript, escribe a {email} desde tu aplicación de correo. Comparte solo información general.",
+    "topics": {
+      "general": "Consulta inicial",
+      "cyber": "Ciberseguridad",
+      "opsec": "Seguridad operativa",
+      "data": "Datos sensibles"
+    },
+    "draft": {
+      "name": "Nombre",
+      "email": "Correo de contacto",
+      "area": "Área"
+    }
+  },
+  "notFound": {
+    "label": "404 / PÁGINA NO ENCONTRADA",
+    "title": "Este lugar está fuera de alcance.",
+    "text": "La dirección no existe o ha cambiado."
+  },
+  "legal": {
+    "updated": "Última actualización: 13 de octubre de 2026",
+    "pages": {
+      "/privacy": {
+        "label": "PRIVACIDAD",
+        "title": "Tu información, con contexto.",
+        "lead": "Información sobre la navegación y el contacto durante la fase de preparación de StaneLabs.",
+        "sections": [
+          {
+            "title": "Un proyecto en preparación",
+            "paragraphs": [
+              "StaneLabs aún no está constituido como entidad y este sitio tiene carácter informativo. Antes de iniciar una actividad comercial se publicarán la identidad y los datos de contacto del titular, así como el aviso de privacidad completo. Para cuestiones sobre esta versión, puedes escribir a {email}."
+            ]
+          },
+          {
+            "title": "Qué ocurre al navegar",
+            "paragraphs": [
+              "El sitio no incorpora herramientas de publicidad, analítica ni cookies propias de seguimiento. Las tipografías y los recursos de la página se sirven desde el mismo origen.",
+              "Para entregar las páginas y proteger el servicio, el alojamiento y, si se utiliza, el proveedor de red pueden procesar datos técnicos como la dirección IP, la URL solicitada y la fecha de acceso. Esta nota no afirma que el alojamiento carezca de registros ni que la navegación sea anónima."
+            ]
+          },
+          {
+            "title": "Qué ocurre al contactar",
+            "paragraphs": [
+              "Comparte únicamente tu nombre, un correo de respuesta y una descripción general de la consulta. No envíes contraseñas, claves, documentos confidenciales ni datos personales de terceros.",
+              "Si el formulario abre un borrador, el envío depende de tu aplicación y proveedor de correo. Si ofrece envío directo, transmite esos campos a la API del sitio para entregarlos por correo. La aplicación no almacena las consultas en una base de datos; el mensaje puede permanecer en los buzones y servicios de correo que intervienen.",
+              "El contenido de una consulta se utiliza para responderla y dar seguimiento a lo que has solicitado. No se utiliza para suscribirte a comunicaciones comerciales."
+            ]
+          },
+          {
+            "title": "Conservación y proveedores",
+            "paragraphs": [
+              "La conservación de mensajes y registros depende del alojamiento y del correo utilizados. Antes de abrir el servicio al público se concretarán los proveedores, los plazos de conservación, la base jurídica y las posibles transferencias internacionales. Mientras tanto, evita compartir información sensible en este canal inicial."
+            ]
+          },
+          {
+            "title": "Consultas sobre tus datos",
+            "paragraphs": [
+              "Escribe a {email} para solicitar información sobre una consulta que hayas enviado, su corrección o eliminación. Describe tu solicitud sin adjuntar documentación de identidad de entrada; si hace falta verificarla, se acordará un medio proporcionado. Esta nota de fase informativa no sustituye la información completa del responsable que debe publicarse antes del lanzamiento."
+            ]
+          }
+        ]
+      },
+      "/security": {
+        "label": "SEGURIDAD",
+        "title": "Divulgación responsable.",
+        "lead": "Un canal claro para comunicar un posible problema de seguridad en este sitio.",
+        "sections": [
+          {
+            "title": "Cómo comunicar un hallazgo",
+            "paragraphs": [
+              "Escribe a {email} con la URL afectada, una descripción del problema, su posible impacto y los pasos mínimos para reproducirlo. Indica un correo al que podamos responder.",
+              "Comparte una prueba limitada y elimina de capturas y ejemplos las credenciales, los tokens y los datos personales. Si el informe necesita información sensible, acuerda primero un canal adecuado."
+            ]
+          },
+          {
+            "title": "Alcance y límites",
+            "paragraphs": [
+              "Este canal se refiere al sitio stanelabs.com y sus servicios propios. Los sistemas de terceros, proveedores o posibles clientes no forman parte de ese alcance.",
+              "Estas pautas no autorizan pruebas intrusivas. No realices denegación de servicio, ingeniería social, envío masivo de mensajes, extracción de datos ni acceso a cuentas ajenas. Si encuentras información de otra persona, detente y comunica el hallazgo sin copiarla ni alterarla."
+            ]
+          },
+          {
+            "title": "Seguimiento del informe",
+            "paragraphs": [
+              "La comunicación permite revisar el problema y acordar los siguientes pasos. No se promete un plazo de respuesta, recompensa ni un programa de bug bounty. Evita publicar detalles que permitan explotar el fallo mientras se coordina su revisión."
+            ]
+          },
+          {
+            "title": "Datos del canal",
+            "paragraphs": [
+              "El archivo [security.txt](/.well-known/security.txt) recoge el contacto y la ubicación de esta política. El idioma de atención indicado es español. Este canal no es un servicio de emergencias ni de respuesta a incidentes de terceros."
+            ]
+          }
+        ]
+      },
+      "/tos": {
+        "label": "CONDICIONES DE USO",
+        "title": "Un alcance claro desde el principio.",
+        "lead": "Condiciones para consultar esta versión informativa de StaneLabs, un proyecto aún en preparación.",
+        "sections": [
+          {
+            "title": "Qué ofrece esta versión",
+            "paragraphs": [
+              "El sitio presenta áreas de trabajo, una metodología y ejemplos ilustrativos. StaneLabs aún no está constituido y esta versión no ofrece contratación online. Navegar, abrir un borrador o enviar una consulta no crea un contrato ni una relación de asesoramiento profesional."
+            ]
+          },
+          {
+            "title": "Uso del sitio",
+            "paragraphs": [
+              "Utiliza la página y sus canales de contacto de forma lícita y respetuosa. No introduzcas datos de terceros sin autorización, no intentes acceder a cuentas o sistemas ajenos y no interfieras con la disponibilidad del servicio. La comunicación de posibles vulnerabilidades se describe en la [política de seguridad](/security)."
+            ]
+          },
+          {
+            "title": "Contenido y ejemplos",
+            "paragraphs": [
+              "Los ejemplos de entregables son demostraciones de formato; no representan trabajos de clientes ni garantizan resultados. La información general del sitio no sustituye una evaluación de tu entorno. Cualquier trabajo futuro requerirá un alcance, una autorización y unas condiciones acordadas por escrito."
+            ]
+          },
+          {
+            "title": "Materiales del sitio",
+            "paragraphs": [
+              "Los textos, el diseño y los recursos propios se presentan para su consulta. Los recursos de terceros conservan sus respectivas licencias. La presencia de una marca o un recurso no implica certificación, afiliación ni autorización para reutilizarlo fuera de lo permitido por su titular."
+            ]
+          },
+          {
+            "title": "Contacto y cambios",
+            "paragraphs": [
+              "Para comunicar un problema o aclarar una condición, escribe a {email}. Las condiciones se actualizarán cuando se identifique al titular y se defina la actividad comercial. Puedes consultar el estado de la contratación en [contratación y compras](/purchase) y el funcionamiento del contacto en la [nota de privacidad](/privacy)."
+            ]
+          }
+        ]
+      },
+      "/purchase": {
+        "label": "CONTRATACIÓN Y COMPRAS",
+        "title": "Todavía no aceptamos compras.",
+        "lead": "StaneLabs está en preparación. No hay productos a la venta, pasarela de pago ni contratación online en esta versión.",
+        "sections": [
+          {
+            "title": "El primer contacto es informativo",
+            "paragraphs": [
+              "Puedes plantear una necesidad general por correo. Esa conversación no constituye una reserva, un pedido ni la aceptación de una oferta. No se solicita ningún pago desde este sitio."
+            ]
+          },
+          {
+            "title": "Antes de ofrecer un servicio",
+            "paragraphs": [
+              "Se identificarán el titular y sus datos fiscales y de contacto. Una propuesta deberá detallar el alcance, las autorizaciones necesarias, los entregables, los plazos, el precio y los impuestos aplicables, así como las condiciones de pago, cancelación y los derechos que correspondan. Hasta entonces no se formalizan compras a través de esta página."
+            ]
+          },
+          {
+            "title": "Pagos y datos sensibles",
+            "paragraphs": [
+              "No envíes datos de tarjeta, documentos de identidad, claves de acceso ni anticipos a partir de esta página. Si recibes una solicitud de pago que afirme proceder de StaneLabs, contrástala por un canal conocido antes de actuar."
+            ]
+          },
+          {
+            "title": "Dónde consultar",
+            "paragraphs": [
+              "Para dudas sobre esta fase, escribe a {email}. Consulta también las [condiciones de uso](/tos) y la [nota de privacidad](/privacy)."
+            ]
+          }
+        ]
+      }
+    }
+  }
+}
