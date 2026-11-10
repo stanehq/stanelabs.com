@@ -3,225 +3,211 @@
 import { useEffect, useRef, type CSSProperties } from 'react';
 
 /**
- * Entry experience for the homepage: a full-screen loader followed by a short
- * simulation of engineers editing the interface together. It is purely visual:
- * the overlay draws cursors and outlines above the page and never changes the
- * page's own content or layout.
+ * Entry experience for the homepage.
  *
- * Phases live in `data-phase` on the root and are driven imperatively, so the
- * component never re-renders: (none) → loading → collab → closing → done.
+ * 1. Loader: a full-screen cover shown once per session for at least four seconds.
+ * 2. Scroll build: as each `[data-build]` block scrolls into view, a collaborator's
+ *    cursor drags out a frame around it and the block fades in, as if the page
+ *    were being assembled in a design tool.
+ *
+ * Everything is drawn on overlay layers; the page's content and layout are never
+ * changed. State lives in data attributes and is driven imperatively, so the
+ * component never re-renders.
+ *
+ * Root attributes: `data-phase` (loading → leaving → done) controls the loader;
+ * `data-mode` enables the build ("full" also builds the hero, "scroll" leaves it
+ * visible on repeat visits so the first paint is not delayed).
  */
 
 const ROOT_ID = 'intro';
 const SEEN_KEY = 'stane:intro-seen';
 const LOADER_MIN_MS = 4000;
-const LOADER_EXIT_MS = 800;
-const STEP_MS = 2500;
-const CLOSING_MS = 600;
-const FAILSAFE_MS = 15000;
-/** Room kept to the right of a cursor so its name label stays on screen. */
-const CURSOR_ROOM_PX = 88;
-const SKIP_EVENTS = ['pointerdown', 'keydown', 'wheel', 'touchstart'] as const;
+const LOADER_EXIT_MS = 700;
+const FAILSAFE_MS = 10000;
 const SCROLL_EVENTS = ['wheel', 'touchmove'] as const;
 
-type Action = 'select' | 'nudge' | 'text';
-/** The first candidate selector that is visible in the viewport is used. */
-type Step = { targets: string[]; action: Action };
-type Engineer = { name: string; delay: number; start: [number, number]; steps: Step[] };
+const TRAVEL_MS = 380;
+const DRAW_MS = 520;
+const HOLD_MS = 600;
+const STAGGER_MS = 140;
+const IDLE_MS = 1400;
+const REVEAL_MS = 450;
+/** Room kept to the right of a cursor so its name label stays on screen. */
+const CURSOR_ROOM_PX = 88;
 
-// `start` is the cursor's entry point as a fraction of the viewport.
-const engineers: Engineer[] = [
-  { name: 'Alex', delay: 0, start: [.12, .82], steps: [
-    { targets: ['.hero-title'], action: 'text' },
-    { targets: ['.hero-description'], action: 'select' },
-  ] },
-  { name: 'Sarah', delay: 250, start: [.9, .34], steps: [
-    { targets: ['.header-contact'], action: 'nudge' },
-    { targets: ['.site-header .brand'], action: 'select' },
-  ] },
-  { name: 'Daniel', delay: 500, start: [.62, .94], steps: [
-    { targets: ['.hero-art'], action: 'select' },
-    { targets: ['.service-card:nth-child(2)', '.eyebrow'], action: 'nudge' },
-  ] },
-  { name: 'Olivia', delay: 700, start: [.04, .42], steps: [
-    { targets: ['.service-card:nth-child(1)', '.hero-actions .text-link'], action: 'select' },
-    { targets: ['.eyebrow', '.hero-actions .text-link'], action: 'text' },
-  ] },
-  { name: 'Marcus', delay: 900, start: [.74, .06], steps: [
-    { targets: ['.desktop-nav', '.menu-button'], action: 'select' },
-    { targets: ['.service-card:nth-child(3)', '.hero-actions .text-link'], action: 'nudge' },
-  ] },
-];
-const COLLAB_MS = Math.max(...engineers.map(engineer => engineer.delay + engineer.steps.length * STEP_MS)) + 200;
+const engineers = ['Alex', 'Sarah', 'Daniel', 'Olivia', 'Marcus'];
 
-// Runs while the HTML is parsed, before the first paint: shows the loader only
-// when scripting works and the visitor has not seen it in this session. The
-// timeout releases the page if the application script never takes over.
-const bootScript = `(function(){var e=document.getElementById('${ROOT_ID}');try{if(!e||sessionStorage.getItem('${SEEN_KEY}'))return;e.dataset.phase='loading';setTimeout(function(){if(e.dataset.phase==='loading')e.dataset.phase='done'},${FAILSAFE_MS})}catch(_){}})();`;
+// Runs while the HTML is parsed, before the first paint, so neither the loader
+// nor the hidden blocks flash. The timeout releases the page if the application
+// script never takes over. Keep in sync with `prepare` below.
+const bootScript = `(function(){var e=document.getElementById('${ROOT_ID}');if(!e)return;e.dataset.boot='1';try{var s=sessionStorage.getItem('${SEEN_KEY}');if(!s)e.dataset.phase='loading';if(!matchMedia('(prefers-reduced-motion: reduce)').matches)e.dataset.mode=s?'scroll':'full';setTimeout(function(){if(e.dataset.ready)return;delete e.dataset.mode;if(e.dataset.phase==='loading')e.dataset.phase='done'},${FAILSAFE_MS})}catch(_){}})();`;
 
-function seenThisSession() {
-  try { return sessionStorage.getItem(SEEN_KEY) !== null; } catch { return true; }
+/** Same decision as the boot script, for renders without prerendered HTML (the Vite preview). */
+function prepare(root: HTMLElement) {
+  try {
+    const seen = sessionStorage.getItem(SEEN_KEY);
+    if (!seen) root.dataset.phase = 'loading';
+    if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) root.dataset.mode = seen ? 'scroll' : 'full';
+  } catch { /* Storage unavailable: skip the experience. */ }
 }
 function rememberSeen() {
-  try { sessionStorage.setItem(SEEN_KEY, '1'); } catch { /* Storage unavailable: the intro simply plays again. */ }
+  try { sessionStorage.setItem(SEEN_KEY, '1'); } catch { /* The loader simply plays again. */ }
 }
 
-function visibleRect(selectors: string[]): DOMRect | null {
-  for (const selector of selectors) {
-    const rect = document.querySelector(selector)?.getBoundingClientRect();
-    if (!rect || rect.width < 8 || rect.height < 8) continue;
-    const visibleHeight = Math.min(rect.bottom, window.innerHeight) - Math.max(rect.top, 0);
-    if (visibleHeight >= Math.min(rect.height * .6, 120) && rect.left < window.innerWidth && rect.right > 0) return rect;
-  }
-  return null;
-}
-
-/** Plays every engineer's steps over the page. Returns a function that cancels pending work. */
-function playCollaboration(stage: HTMLElement) {
-  const timers: number[] = [];
-  const at = (delay: number, task: () => void) => { timers.push(window.setTimeout(task, delay)); };
-  // Small screens get four cursors so they do not crowd the content.
-  const count = window.innerWidth < 600 ? 4 : engineers.length;
-
-  engineers.slice(0, count).forEach((engineer, index) => {
-    const peer = stage.children[index];
-    const cursorX = peer.querySelector<HTMLElement>('.intro-cursor-x');
-    const cursorY = peer.querySelector<HTMLElement>('.intro-cursor-y');
-    const outline = peer.querySelector<HTMLElement>('.intro-outline');
-    const size = peer.querySelector<HTMLElement>('.intro-size');
-    if (!cursorX || !cursorY || !outline || !size) return;
-
-    // X and Y travel on separate elements with different easings, which bends
-    // the path into a natural arc instead of a straight line.
-    const moveCursor = (x: number, y: number) => {
-      cursorX.style.transform = `translate3d(${Math.round(Math.max(4, Math.min(window.innerWidth - CURSOR_ROOM_PX, x)))}px, 0, 0)`;
-      cursorY.style.transform = `translate3d(0, ${Math.round(Math.max(4, Math.min(window.innerHeight - 28, y)))}px, 0)`;
-    };
-    const shiftOutline = (rect: DOMRect, dx: number, dy: number) => {
-      outline.style.transform = `translate3d(${Math.round(rect.left + dx)}px, ${Math.round(rect.top + dy)}px, 0)`;
-    };
-
-    cursorX.style.transitionDuration = cursorY.style.transitionDuration = '0s';
-    moveCursor(engineer.start[0] * window.innerWidth, engineer.start[1] * window.innerHeight);
-    at(engineer.delay, () => {
-      cursorX.style.transitionDuration = cursorY.style.transitionDuration = '';
-      peer.setAttribute('data-active', '');
-    });
-
-    engineer.steps.forEach((step, stepIndex) => {
-      const begin = engineer.delay + 80 + stepIndex * STEP_MS;
-      at(begin, () => {
-        const rect = visibleRect(step.targets);
-        if (!rect) return;
-        const right = Math.min(rect.right, window.innerWidth - 8), bottom = Math.min(rect.bottom, window.innerHeight - 8);
-        const textRow = rect.top + Math.min(rect.height * .5, 28);
-        // Approach the element: its start for a text selection, a corner otherwise.
-        if (step.action === 'text') moveCursor(rect.left - 2, textRow);
-        else moveCursor(right - 4, bottom - 4);
-
-        at(850, () => {
-          outline.style.transitionDuration = '0s';
-          outline.style.width = `${Math.round(rect.width)}px`;
-          outline.style.height = `${Math.round(rect.height)}px`;
-          shiftOutline(rect, 0, 0);
-          size.textContent = `${Math.round(rect.width)} × ${Math.round(rect.height)}`;
-          outline.setAttribute('data-action', step.action);
-          void outline.offsetWidth; // Commit the new box before it fades in.
-          outline.style.transitionDuration = '';
-          outline.setAttribute('data-visible', '');
-        });
-        if (step.action === 'text') at(1000, () => { outline.setAttribute('data-selected', ''); moveCursor(right - 6, textRow + 6); });
-        if (step.action === 'nudge') {
-          at(1150, () => { shiftOutline(rect, 6, -4); moveCursor(right + 2, bottom - 8); });
-          at(1650, () => { shiftOutline(rect, 0, 0); moveCursor(right - 4, bottom - 4); });
-        }
-        at(2150, () => { outline.removeAttribute('data-visible'); outline.removeAttribute('data-selected'); });
-      });
-    });
+/** Builds each target the first time it scrolls into view. Returns a function that stops it. */
+function startBuilder(stage: HTMLElement, includeHero: boolean) {
+  const timers = new Set<number>();
+  const later = (delay: number, task: () => void) => {
+    const id = window.setTimeout(() => { timers.delete(id); task(); }, delay);
+    timers.add(id);
+    return id;
+  };
+  const inProgress = new Set<Element>();
+  const workers = Array.from(stage.children).flatMap(peer => {
+    const cursorX = peer.querySelector<HTMLElement>('.build-cursor-x');
+    const cursorY = peer.querySelector<HTMLElement>('.build-cursor-y');
+    const outline = peer.querySelector<HTMLElement>('.build-outline');
+    const size = peer.querySelector<HTMLElement>('.build-size');
+    return cursorX && cursorY && outline && size ? [{ peer, cursorX, cursorY, outline, size, busy: false, visible: false, y: 0, idle: 0 }] : [];
   });
+  type Worker = typeof workers[number];
+  let nextWorker = 0, lastStart = 0;
 
-  return () => timers.forEach(timer => window.clearTimeout(timer));
-}
+  const reveal = (target: Element) => {
+    target.setAttribute('data-built', '');
+    // A script animation also takes precedence over the hero's own CSS entrance.
+    target.animate?.([{ opacity: 0 }, { opacity: 1 }], { duration: REVEAL_MS, easing: 'ease-out' });
+  };
+  // X and Y travel on separate elements with different easings, which bends
+  // the path into a natural arc instead of a straight line.
+  const moveCursor = (worker: Worker, x: number, y: number, duration: number) => {
+    worker.cursorX.style.transitionDuration = worker.cursorY.style.transitionDuration = `${duration}ms`;
+    worker.cursorX.style.transform = `translate3d(${Math.round(Math.max(4, Math.min(stage.clientWidth - CURSOR_ROOM_PX, x)))}px, 0, 0)`;
+    worker.cursorY.style.transform = `translate3d(0, ${Math.round(Math.max(4, y))}px, 0)`;
+    worker.y = y;
+  };
 
-function Cursor({ name }: { name: string }) {
-  return (
-    <div className="intro-cursor-x">
-      <div className="intro-cursor-y">
-        <div className="intro-cursor">
-          <svg width="18" height="20" viewBox="0 0 18 20" fill="none">
-            <path d="M2 1.5 15.5 9.6 9.1 11.3 6 17.6 2 1.5Z" fill="currentColor" stroke="white" strokeWidth="1.2" strokeLinejoin="round" />
-          </svg>
-          <span className="intro-cursor-name">{name}</span>
-        </div>
-      </div>
-    </div>
-  );
+  const run = (worker: Worker, target: Element) => {
+    // The stage scrolls with the page, so positions are relative to it.
+    const frame = stage.getBoundingClientRect(), rect = target.getBoundingClientRect();
+    const left = rect.left - frame.left, top = rect.top - frame.top;
+    window.clearTimeout(worker.idle);
+    if (!worker.visible || Math.abs(worker.y - top) > window.innerHeight) {
+      // Enter from just outside the block instead of crossing the whole page.
+      moveCursor(worker, left + rect.width + 60, top + Math.min(rect.height, 180) + 70, 0);
+      void worker.cursorX.offsetWidth;
+      worker.peer.setAttribute('data-active', '');
+      worker.visible = true;
+    }
+    moveCursor(worker, left, top, TRAVEL_MS);
+    later(TRAVEL_MS, () => {
+      const { outline } = worker;
+      outline.style.transitionDuration = '0s';
+      outline.style.transform = `translate3d(${Math.round(left)}px, ${Math.round(top)}px, 0)`;
+      outline.style.width = outline.style.height = '12px';
+      outline.removeAttribute('data-sized');
+      void outline.offsetWidth; // Commit the starting box before it grows.
+      outline.style.transitionDuration = '';
+      outline.setAttribute('data-visible', '');
+      outline.style.width = `${Math.round(rect.width)}px`;
+      outline.style.height = `${Math.round(rect.height)}px`;
+      moveCursor(worker, left + rect.width, top + rect.height, DRAW_MS);
+    });
+    later(TRAVEL_MS + DRAW_MS, () => {
+      worker.size.textContent = `${Math.round(rect.width)} × ${Math.round(rect.height)}`;
+      worker.outline.setAttribute('data-sized', '');
+      inProgress.delete(target);
+      reveal(target);
+    });
+    later(TRAVEL_MS + DRAW_MS + HOLD_MS, () => {
+      worker.outline.removeAttribute('data-visible');
+      worker.busy = false;
+      worker.idle = later(IDLE_MS, () => { worker.peer.removeAttribute('data-active'); worker.visible = false; });
+    });
+  };
+
+  const build = (target: Element) => {
+    let worker: Worker | undefined;
+    for (let offset = 0; offset < workers.length && !worker; offset++) {
+      const candidate = workers[(nextWorker + offset) % workers.length];
+      if (!candidate.busy) { worker = candidate; nextWorker = (nextWorker + offset + 1) % workers.length; }
+    }
+    // Everyone is busy (a fast scroll): show the block without waiting.
+    if (!worker) { reveal(target); return; }
+    const assigned = worker;
+    assigned.busy = true;
+    inProgress.add(target);
+    const delay = Math.max(0, lastStart + STAGGER_MS - performance.now());
+    lastStart = performance.now() + delay;
+    later(delay, () => run(assigned, target));
+  };
+
+  const observer = new IntersectionObserver(entries => {
+    for (const entry of entries) {
+      if (!entry.isIntersecting) continue;
+      observer.unobserve(entry.target);
+      build(entry.target);
+    }
+  }, { threshold: .15, rootMargin: '0px 0px -6% 0px' });
+  const selector = includeHero ? '[data-build]:not([data-built])' : '[data-build]:not([data-build="hero"]):not([data-built])';
+  document.querySelectorAll(selector).forEach(target => observer.observe(target));
+
+  return () => {
+    observer.disconnect();
+    timers.forEach(timer => window.clearTimeout(timer));
+    inProgress.forEach(target => target.setAttribute('data-built', ''));
+    for (const worker of workers) {
+      worker.peer.removeAttribute('data-active');
+      worker.outline.removeAttribute('data-visible');
+    }
+  };
 }
 
 export function IntroExperience() {
   const rootRef = useRef<HTMLDivElement>(null);
+  const stageRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const root = rootRef.current;
-    const stage = root?.querySelector<HTMLElement>('.intro-stage');
+    const root = rootRef.current, stage = stageRef.current;
     if (!root || !stage) return;
-    // Without prerendered HTML (the Vite preview) the boot script has not run.
-    if (!root.dataset.phase && !seenThisSession()) root.dataset.phase = 'loading';
-    if (root.dataset.phase !== 'loading') return;
+    if (!root.dataset.boot) { root.dataset.boot = '1'; prepare(root); }
+    root.dataset.ready = '1';
 
     const timers: number[] = [];
     const later = (delay: number, task: () => void) => { timers.push(window.setTimeout(task, delay)); };
-    let stopCollaboration = () => {};
-    let finished = false;
-
+    let stopBuilder = () => {};
+    const build = () => {
+      if (root.dataset.mode) stopBuilder = startBuilder(stage, root.dataset.mode === 'full');
+    };
     const blockScroll = (event: Event) => event.preventDefault();
-    const releaseInput = () => {
-      window.removeEventListener('load', reveal);
+    const releaseScroll = () => {
       for (const type of SCROLL_EVENTS) window.removeEventListener(type, blockScroll);
-      for (const type of SKIP_EVENTS) window.removeEventListener(type, close);
     };
-    const stopWork = () => {
-      timers.forEach(timer => window.clearTimeout(timer));
-      stopCollaboration();
-      releaseInput();
-    };
-    const finish = () => {
-      if (finished) return;
-      finished = true;
-      stopWork();
-      root.dataset.phase = 'done';
+    const leave = () => {
+      root.dataset.phase = 'leaving';
       rememberSeen();
-    };
-    // Cursors and outlines fade out together; any visitor input also ends the simulation.
-    function close() {
-      if (root?.dataset.phase !== 'collab') return;
-      root.dataset.phase = 'closing';
-      releaseInput();
-      later(CLOSING_MS, finish);
-    }
-    const collaborate = () => {
-      if (root.dataset.phase !== 'loading') { finish(); return; }
-      root.dataset.phase = 'collab';
-      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) { later(LOADER_EXIT_MS, finish); return; }
-      for (const type of SKIP_EVENTS) window.addEventListener(type, close, { passive: true });
-      later(LOADER_EXIT_MS - 250, () => { stopCollaboration = playCollaboration(stage); });
-      later(LOADER_EXIT_MS - 250 + COLLAB_MS, close);
+      releaseScroll();
+      later(LOADER_EXIT_MS / 2, build);
+      later(LOADER_EXIT_MS, () => { root.dataset.phase = 'done'; });
     };
     // The minimum counts from navigation start, so a slow page load adds no extra wait.
-    function reveal() {
-      later(Math.max(0, LOADER_MIN_MS - performance.now()), collaborate);
+    const reveal = () => later(Math.max(0, LOADER_MIN_MS - performance.now()), leave);
+
+    if (root.dataset.phase === 'loading') {
+      // iOS Safari can still pan a page whose root has overflow hidden.
+      for (const type of SCROLL_EVENTS) window.addEventListener(type, blockScroll, { passive: false });
+      if (document.readyState === 'complete') reveal();
+      else window.addEventListener('load', reveal, { once: true });
+    } else {
+      build();
     }
 
-    // Scrolling stays blocked until the simulation closes. Listeners are needed
-    // because iOS Safari can pan a page whose root has overflow hidden.
-    for (const type of SCROLL_EVENTS) window.addEventListener(type, blockScroll, { passive: false });
-    if (document.readyState === 'complete') reveal();
-    else window.addEventListener('load', reveal, { once: true });
-
     return () => {
-      stopWork();
-      // Unmounting mid-simulation must not leave the page locked.
-      if (root.dataset.phase !== 'loading') finish();
+      timers.forEach(timer => window.clearTimeout(timer));
+      window.removeEventListener('load', reveal);
+      releaseScroll();
+      stopBuilder();
+      if (root.dataset.phase === 'leaving') root.dataset.phase = 'done';
     };
   }, []);
 
@@ -242,20 +228,28 @@ export function IntroExperience() {
             </p>
           </div>
         </div>
-        <div className="intro-stage">
-          {engineers.map((engineer, index) => (
-            <div key={engineer.name} className="intro-peer" style={{ '--peer': `var(--intro-peer-${index + 1})` } as CSSProperties}>
-              <div className="intro-outline">
-                <span className="intro-highlight" />
-                <span className="intro-handle" /><span className="intro-handle" /><span className="intro-handle" /><span className="intro-handle" />
-                <span className="intro-size" />
-              </div>
-              <Cursor name={engineer.name} />
-            </div>
-          ))}
-        </div>
       </div>
       <script dangerouslySetInnerHTML={{ __html: bootScript }} />
+      <div ref={stageRef} className="build-stage" aria-hidden="true">
+        {engineers.map((name, index) => (
+          <div key={name} className="build-peer" style={{ '--peer': `var(--build-peer-${index + 1})` } as CSSProperties}>
+            <div className="build-outline">
+              <span className="build-handle" /><span className="build-handle" /><span className="build-handle" /><span className="build-handle" />
+              <span className="build-size" />
+            </div>
+            <div className="build-cursor-x">
+              <div className="build-cursor-y">
+                <div className="build-cursor">
+                  <svg width="18" height="20" viewBox="0 0 18 20" fill="none">
+                    <path d="M2 1.5 15.5 9.6 9.1 11.3 6 17.6 2 1.5Z" fill="currentColor" stroke="white" strokeWidth="1.2" strokeLinejoin="round" />
+                  </svg>
+                  <span className="build-cursor-name">{name}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
     </>
   );
 }
