@@ -1,5 +1,6 @@
 import { ArgumentsHost, Catch, ExceptionFilter, HttpException } from '@nestjs/common';
 import type { Response } from 'express';
+import { CONTACT_UNAVAILABLE_MESSAGES } from './contact.service';
 
 const safeMessages: Record<number, string> = {
   400: 'Solicitud no válida. Revisa los campos del formulario.',
@@ -8,10 +9,7 @@ const safeMessages: Record<number, string> = {
   429: 'Has realizado demasiadas solicitudes. Inténtalo más tarde.',
   503: 'El contacto directo no está disponible. Inténtalo más tarde o utiliza el correo de seguridad.',
 };
-const safeUnavailableMessages = new Set([
-  'El contacto directo todavía no está disponible. Puedes escribir a security@stanelabs.com.',
-  'No se pudo entregar el mensaje. Inténtalo más tarde o utiliza el correo de seguridad.',
-]);
+const safeUnavailableMessages = new Set<string>(Object.values(CONTACT_UNAVAILABLE_MESSAGES));
 
 /** Never serialize or log an exception, request, parser snippet or validation value. */
 @Catch()

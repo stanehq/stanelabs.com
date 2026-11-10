@@ -1,0 +1,25 @@
+{
+  "socialImageAlt": "Stane: Ciberseguridad. OPSEC. Privacidad.",
+  "pages": {
+    "/": {
+      "title": "Stane: Ciberseguridad, OPSEC y protección de datos",
+      "description": "Seguridad con criterio. Stane: ciberseguridad, seguridad operativa y protección de información sensible. Menos exposición. Más control."
+    },
+    "/security": {
+      "title": "Stane: Divulgación responsable",
+      "description": "Canal de seguridad y pautas para comunicar responsablemente posibles vulnerabilidades en Stane."
+    },
+    "/privacy": {
+      "title": "Stane: Privacidad",
+      "description": "Información sobre el funcionamiento del contacto, los recursos externos y la privacidad del sitio de Stane."
+    },
+    "/tos": {
+      "title": "Stane: Condiciones de uso",
+      "description": "Condiciones de uso del sitio informativo de StaneLabs, un proyecto en preparación sin contratación online."
+    },
+    "/purchase": {
+      "title": "Stane: Contratación",
+      "description": "Estado de la contratación en StaneLabs: proyecto en preparación, sin compras, pagos ni pedidos online."
+    }
+  }
+}

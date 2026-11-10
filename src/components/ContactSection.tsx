@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, useSyncExternalStore, type FormEvent } from 'react';
 import config from '../../project-config.json';
+import { CONTACT_TOPIC_EVENT } from '../lib/events';
 import { Icon } from './Icon';
 import { Button } from './ui/button';
 import { Input, Textarea } from './ui/input';
@@ -9,22 +10,26 @@ import { Input, Textarea } from './ui/input';
 const contactApiUrl = (process.env.NEXT_PUBLIC_CONTACT_API_URL || '').replace(/\/$/, '');
 const topics = ['Consulta inicial', 'Ciberseguridad', 'Seguridad operativa', 'Datos sensibles'] as const;
 type Topic = typeof topics[number];
+const defaultTopic: Topic = topics[0];
+const isTopic = (value: unknown): value is Topic => topics.some(topic => topic === value);
 type DeliveryMode = 'waiting' | 'checking' | 'direct' | 'draft';
 
+// useSyncExternalStore reports false on the server and true once hydrated,
+// so the form stays disabled until JavaScript can handle its submission.
 const subscribeHydration = () => () => {};
 const clientSnapshot = () => true;
 const serverSnapshot = () => false;
 
 function prepareDraft(values: FormData, topic: string) {
   const body = `Nombre: ${values.get('name')}\nCorreo de contacto: ${values.get('email')}\nÁrea: ${topic}\n\n${values.get('message')}`;
-  return `mailto:${config.contactEmail}?subject=${encodeURIComponent(`Stane — ${topic}`)}&body=${encodeURIComponent(body)}`;
+  return `mailto:${config.contactEmail}?subject=${encodeURIComponent(`Stane: ${topic}`)}&body=${encodeURIComponent(body)}`;
 }
 
 export default function ContactSection({ expanded, onClose }: { expanded: boolean; onClose: () => void }) {
   const sectionRef = useRef<HTMLDivElement>(null);
   const panelHeadingRef = useRef<HTMLHeadingElement>(null);
   const hydrated = useSyncExternalStore(subscribeHydration, clientSnapshot, serverSnapshot);
-  const [topic, setTopic] = useState<Topic>('Consulta inicial');
+  const [topic, setTopic] = useState<Topic>(defaultTopic);
   const [mode, setMode] = useState<DeliveryMode>(contactApiUrl ? 'waiting' : 'draft');
   const [pending, setPending] = useState(false);
   const [notice, setNotice] = useState('');
@@ -33,10 +38,10 @@ export default function ContactSection({ expanded, onClose }: { expanded: boolea
   useEffect(() => {
     const selectTopic = (event: Event) => {
       const detail: unknown = (event as CustomEvent).detail;
-      if (typeof detail === 'string' && topics.includes(detail as Topic)) setTopic(detail as Topic);
+      if (isTopic(detail)) setTopic(detail);
     };
-    window.addEventListener('stane:contact-topic', selectTopic);
-    return () => window.removeEventListener('stane:contact-topic', selectTopic);
+    window.addEventListener(CONTACT_TOPIC_EVENT, selectTopic);
+    return () => window.removeEventListener(CONTACT_TOPIC_EVENT, selectTopic);
   }, []);
 
   useEffect(() => {
@@ -82,7 +87,7 @@ export default function ContactSection({ expanded, onClose }: { expanded: boolea
     event.preventDefault();
     if (!hydrated || pending || mode === 'waiting' || mode === 'checking') return;
     const values = new FormData(event.currentTarget);
-    const selectedTopic = String(values.get('topic') || 'Consulta inicial');
+    const selectedTopic = String(values.get('topic') || defaultTopic);
     setNotice('');
     setDraft('');
     if (mode !== 'direct') {
@@ -112,28 +117,64 @@ export default function ContactSection({ expanded, onClose }: { expanded: boolea
   }
 
   const checking = mode === 'waiting' || mode === 'checking';
-  return <div ref={sectionRef} id="contacto" className="contact-dropdown" data-open={expanded} inert={!expanded} aria-hidden={!expanded} aria-labelledby="consultation-heading" role="region">
-    <div className="contact-dropdown-clip">
-      <div className="contact-panel">
-        <div className="contact-panel-heading"><h3 id="consultation-heading" ref={panelHeadingRef} tabIndex={-1}>Tu consulta</h3><button type="button" className="contact-close" onClick={onClose} aria-label="Cerrar formulario"><Icon name="x" size={20} /></button></div>
-        <form className="contact-form" onSubmit={submit} method="post" aria-describedby="contact-delivery-note">
-          <fieldset className="contact-fieldset" disabled={!hydrated || pending}>
-            <input name="website" type="text" tabIndex={-1} autoComplete="off" aria-hidden="true" className="honeypot" />
-            <div className="form-grid">
-              <label className="field"><span className="field-label">Tu nombre</span><Input name="name" placeholder="Cómo te llamas" autoComplete="name" required maxLength={100} /></label>
-              <label className="field"><span className="field-label">Correo de contacto</span><Input name="email" type="email" placeholder="tu@correo.com" autoComplete="email" required maxLength={180} /></label>
-            </div>
-            <label className="field"><span className="field-label">¿Sobre qué quieres consultar?</span><select name="topic" value={topic} onChange={event => setTopic(event.target.value as Topic)} className="native-select">{topics.map(value => <option key={value}>{value}</option>)}</select></label>
-            <label className="field"><span className="field-label">Un poco de contexto</span><Textarea name="message" placeholder="Qué te preocupa y qué te gustaría aclarar. No incluyas contraseñas, claves ni datos de terceros." required maxLength={2000} rows={4} /></label>
-            <p id="contact-delivery-note" className="form-note"><Icon name="lock" size={16} />{mode === 'direct' ? 'La consulta se enviará a Stane por correo. Comparte solo información general.' : checking ? 'Comprobando el canal de contacto. Puedes ir preparando tu consulta.' : 'El formulario prepara un borrador en tu aplicación de correo. Revísalo y envíalo allí; no se envía automáticamente.'}</p>
-            <div className="contact-submit-row"><Button type="submit" className="form-action" disabled={checking || pending}>{pending ? 'Enviando…' : checking ? 'Comprobando canal…' : mode === 'direct' ? 'Enviar consulta' : 'Preparar consulta'}<Icon name="arrow-up-right" size={20} /></Button></div>
-          </fieldset>
-          {notice && <p className="form-result" role="status">{notice}</p>}
-          {draft && <div className="form-result" role="status"><p>Tu borrador está preparado. Ábrelo para revisarlo y enviarlo desde tu aplicación de correo.</p><a className="contact-draft-link" href={draft}>Abrir borrador<Icon name="external-link" size={16} /></a></div>}
-          <p className="form-note">Consulta cómo se trata la información en la <a href="/privacy">nota de privacidad</a>.</p>
-          <noscript><p className="contact-noscript">Para contactar sin JavaScript, escribe a <a href={`mailto:${config.contactEmail}`}>{config.contactEmail}</a> desde tu aplicación de correo. Comparte solo información general.</p></noscript>
-        </form>
+  const deliveryNote = mode === 'direct'
+    ? 'La consulta se enviará a Stane por correo. Comparte solo información general.'
+    : checking
+      ? 'Comprobando el canal de contacto. Puedes ir preparando tu consulta.'
+      : 'El formulario prepara un borrador en tu aplicación de correo. Revísalo y envíalo allí; no se envía automáticamente.';
+  const submitLabel = pending ? 'Enviando…' : checking ? 'Comprobando canal…' : mode === 'direct' ? 'Enviar consulta' : 'Preparar consulta';
+
+  return (
+    <div ref={sectionRef} id="contacto" className="contact-dropdown" data-open={expanded} inert={!expanded} aria-hidden={!expanded} aria-labelledby="consultation-heading" role="region">
+      <div className="contact-dropdown-clip">
+        <div className="contact-panel">
+          <div className="contact-panel-heading">
+            <h3 id="consultation-heading" ref={panelHeadingRef} tabIndex={-1}>Tu consulta</h3>
+            <button type="button" className="contact-close" onClick={onClose} aria-label="Cerrar formulario"><Icon name="x" size={20} /></button>
+          </div>
+          <form className="contact-form" onSubmit={submit} method="post" aria-describedby="contact-delivery-note">
+            <fieldset className="contact-fieldset" disabled={!hydrated || pending}>
+              <input name="website" type="text" tabIndex={-1} autoComplete="off" aria-hidden="true" className="honeypot" />
+              <div className="form-grid">
+                <label className="field">
+                  <span className="field-label">Tu nombre</span>
+                  <Input name="name" placeholder="Cómo te llamas" autoComplete="name" required maxLength={100} />
+                </label>
+                <label className="field">
+                  <span className="field-label">Correo de contacto</span>
+                  <Input name="email" type="email" placeholder="tu@correo.com" autoComplete="email" required maxLength={180} />
+                </label>
+              </div>
+              <label className="field">
+                <span className="field-label">¿Sobre qué quieres consultar?</span>
+                <select name="topic" value={topic} onChange={event => { if (isTopic(event.target.value)) setTopic(event.target.value); }}>
+                  {topics.map(value => <option key={value}>{value}</option>)}
+                </select>
+              </label>
+              <label className="field">
+                <span className="field-label">Un poco de contexto</span>
+                <Textarea name="message" placeholder="Qué te preocupa y qué te gustaría aclarar. No incluyas contraseñas, claves ni datos de terceros." required maxLength={2000} rows={4} />
+              </label>
+              <p id="contact-delivery-note" className="form-note"><Icon name="lock" size={16} />{deliveryNote}</p>
+              <Button type="submit" className="form-action" disabled={checking || pending}>
+                {submitLabel}
+                <Icon name="arrow-up-right" size={20} />
+              </Button>
+            </fieldset>
+            {notice && <p className="form-result" role="status">{notice}</p>}
+            {draft && (
+              <div className="form-result" role="status">
+                <p>Tu borrador está preparado. Ábrelo para revisarlo y enviarlo desde tu aplicación de correo.</p>
+                <a className="contact-draft-link" href={draft}>Abrir borrador<Icon name="external-link" size={16} /></a>
+              </div>
+            )}
+            <p className="form-note">Consulta cómo se trata la información en la <a href="/privacy">nota de privacidad</a>.</p>
+            <noscript>
+              <p className="contact-noscript">Para contactar sin JavaScript, escribe a <a href={`mailto:${config.contactEmail}`}>{config.contactEmail}</a> desde tu aplicación de correo. Comparte solo información general.</p>
+            </noscript>
+          </form>
+        </div>
       </div>
     </div>
-  </div>;
+  );
 }

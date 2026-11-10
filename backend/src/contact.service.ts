@@ -4,6 +4,12 @@ import nodemailer from 'nodemailer';
 import type { Transporter } from 'nodemailer';
 import type { ContactDto } from './contact.dto';
 
+/** Server-authored 503 messages; the exception filter lets only these reach the client. */
+export const CONTACT_UNAVAILABLE_MESSAGES = {
+  notConfigured: 'El contacto directo todavía no está disponible. Puedes escribir a security@stanelabs.com.',
+  deliveryFailed: 'No se pudo entregar el mensaje. Inténtalo más tarde o utiliza el correo de seguridad.',
+} as const;
+
 @Injectable()
 export class ContactService {
   private readonly transport: Transporter | null;
@@ -13,14 +19,15 @@ export class ContactService {
   constructor(private readonly config: ConfigService) {
     this.recipient = config.get<string>('SECURITY_EMAIL') || 'security@stanelabs.com';
     this.sender = config.get<string>('SMTP_FROM') || '';
+    const secure = config.get<boolean>('SMTP_SECURE') === true;
     const host = config.get<string>('SMTP_HOST');
     const user = config.get<string>('SMTP_USER');
     const pass = config.get<string>('SMTP_PASS');
     this.transport = host && user && pass && this.sender ? nodemailer.createTransport({
       host,
       port: config.get<number>('SMTP_PORT') || 587,
-      secure: config.get<boolean>('SMTP_SECURE') === true,
-      requireTLS: config.get<boolean>('SMTP_SECURE') !== true,
+      secure,
+      requireTLS: !secure,
       auth: { user, pass },
       connectionTimeout: 10_000,
       greetingTimeout: 10_000,
@@ -35,13 +42,13 @@ export class ContactService {
   configured(): boolean { return this.transport !== null; }
 
   async send(dto: ContactDto): Promise<{ status: 'sent' }> {
-    if (!this.transport) throw new ServiceUnavailableException('El contacto directo todavía no está disponible. Puedes escribir a security@stanelabs.com.');
+    if (!this.transport) throw new ServiceUnavailableException(CONTACT_UNAVAILABLE_MESSAGES.notConfigured);
     try {
       const result = await this.transport.sendMail({
         from: this.sender,
         to: this.recipient,
         replyTo: dto.email,
-        subject: `StaneLabs — ${dto.topic}`,
+        subject: `StaneLabs: ${dto.topic}`,
         text: `Consulta desde el sitio de StaneLabs\n\nNombre: ${dto.name}\nCorreo: ${dto.email}\nÁrea: ${dto.topic}\n\n${dto.message}\n`,
         disableFileAccess: true,
         disableUrlAccess: true,
@@ -52,7 +59,7 @@ export class ContactService {
       return { status: 'sent' };
     } catch {
       // Do not log the SMTP exception: it may contain addresses, message content or credentials.
-      throw new ServiceUnavailableException('No se pudo entregar el mensaje. Inténtalo más tarde o utiliza el correo de seguridad.');
+      throw new ServiceUnavailableException(CONTACT_UNAVAILABLE_MESSAGES.deliveryFailed);
     }
   }
 }

@@ -23,7 +23,7 @@ Configura `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASS`, `SM
 
 - `GET /api/health`: `200 { "status": "ok" }`.
 - `GET /api/contact/status`: `200 { "configured": false }` hasta que existan los valores SMTP necesarios. Indica configuración, no disponibilidad del servidor ni entrega garantizada.
-- `POST /api/contact`: JSON con `name` (1–100 caracteres), `email` (máximo 180), `topic`, `message` (1–2000) y opcionalmente `website` vacío como honeypot. Los campos se recortan; se rechazan campos desconocidos, correo inválido y saltos de línea en cabeceras. Topics: `Consulta inicial`, `Ciberseguridad`, `Seguridad operativa`, `Datos sensibles`.
+- `POST /api/contact`: JSON con `name` (1 a 100 caracteres), `email` (máximo 180), `topic`, `message` (1 a 2000) y opcionalmente `website` vacío como honeypot. Los campos se recortan; se rechazan campos desconocidos, correo inválido y saltos de línea en cabeceras. Topics: `Consulta inicial`, `Ciberseguridad`, `Seguridad operativa`, `Datos sensibles`.
 
 Una respuesta `200 { "status": "sent" }` significa que el servidor SMTP aceptó el destinatario. No garantiza ubicación en la bandeja de entrada ni lectura. El sistema espera `sendMail`; un rechazo o fallo SMTP devuelve `503`, nunca un éxito simulado. Configuración incompleta devuelve `503`; datos inválidos o honeypot rellenado, `400`; límite excedido, `429`. No se permite adjuntar archivos ni incluir HTML remoto.
 
@@ -33,7 +33,7 @@ El contacto permite tres peticiones por minuto y dirección IP. El resto de ruta
 
 No se han configurado el VPS ni credenciales SMTP reales. El backend necesita un proceso Node persistente o un contenedor y un proxy HTTPS. Expón `/api` mediante el proxy del dominio y conecta el frontend al mismo origen o al origen específico de esta API. Si existe `backend/public` o el directorio compilado indicado en `WEB_ROOT`, Express sirve la exportación de Next.js desde allí, incluidos los archivos de `/.well-known`. No hay un fallback a la página principal: una ruta desconocida conserva un 404. Copia únicamente la exportación compilada a ese directorio; nunca fuentes, `.env` ni credenciales.
 
-Helmet configura cabeceras y una política CSP que permite las tipografías de Google y los scripts inline de hidratación de la exportación de Next.js. El frontend servido por este proceso se conecta a la API en su mismo origen.
+Helmet configura cabeceras y una política CSP que admite fuentes únicamente del mismo origen y los scripts inline de hidratación de la exportación de Next.js. El frontend servido por este proceso se conecta a la API en su mismo origen.
 
 Configura `TRUST_PROXY` únicamente con la IP/subred real del proxy de tu alojamiento; por defecto no se confía en cabeceras reenviadas. `loopback` es válido si el proxy está en el mismo servidor. No uses un trust general: permitiría falsificar el identificador utilizado por el limitador. Con varias réplicas, añade un limitador compartido o limita en el proxy.
 

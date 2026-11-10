@@ -70,7 +70,7 @@ function readLinearColor(name: string): Float32Array {
   return new Float32Array([1, 3, 5].map(index => (parseInt(hex.slice(index, index + 2), 16) / 255) ** 2.2));
 }
 
-export default function LiquidField({ className = '' }: { className?: string }) {
+export default function LiquidField() {
   const fieldRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [fallback, setFallback] = useState(false);
@@ -123,11 +123,9 @@ export default function LiquidField({ className = '' }: { className?: string }) 
       if (!gl.getProgramParameter(program, gl.LINK_STATUS)) { releaseResources(); setFallback(true); return; }
       gl.useProgram(program);
       const vertexBuffer = gl.createBuffer(), elementBuffer = gl.createBuffer();
-      if (!vertexBuffer || !elementBuffer) {
-        if (vertexBuffer) gl.deleteBuffer(vertexBuffer); if (elementBuffer) gl.deleteBuffer(elementBuffer);
-        shaders.forEach(shader => gl.deleteShader(shader)); gl.deleteProgram(program); setFallback(true); return;
-      }
-      buffers.push(vertexBuffer, elementBuffer);
+      if (vertexBuffer) buffers.push(vertexBuffer);
+      if (elementBuffer) buffers.push(elementBuffer);
+      if (!vertexBuffer || !elementBuffer) { releaseResources(); setFallback(true); return; }
       gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
       gl.bufferData(gl.ARRAY_BUFFER, new Uint8Array(data, 24, vertexCount * stride), gl.STATIC_DRAW);
       for (const [name, size, type, offset] of [['a_position', 3, gl.SHORT, 0], ['a_normal', 3, gl.SHORT, 6], ['a_occlusion', 1, gl.UNSIGNED_BYTE, 12]] as const) {
@@ -230,5 +228,5 @@ export default function LiquidField({ className = '' }: { className?: string }) 
     initialize().catch(() => { if (!controller.signal.aborted) setFallback(true); });
     return () => { controller.abort(); cleanup(); };
   }, []);
-  return <div ref={fieldRef} className={`liquid-field ${className}`} aria-hidden="true"><div className="sculpture-ground" /><canvas ref={canvasRef} className={`sculpture-canvas${ready ? ' is-ready' : ''}${fallback ? ' is-unavailable' : ''}`} /></div>;
+  return <div ref={fieldRef} className="liquid-field" aria-hidden="true"><div className="sculpture-ground" /><canvas ref={canvasRef} className={`sculpture-canvas${ready ? ' is-ready' : ''}${fallback ? ' is-unavailable' : ''}`} /></div>;
 }

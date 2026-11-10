@@ -1,8 +1,11 @@
-import { readFile, writeFile, mkdir, readdir, access } from 'node:fs/promises';
+import { access, mkdir, readdir, readFile, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { projectRoot as root } from './project-root.mjs';
 
-const config = JSON.parse(await readFile(path.join(root, 'project-config.json'), 'utf8'));
+const readJson = async (filename) => JSON.parse(await readFile(path.join(root, filename), 'utf8'));
+const config = await readJson('project-config.json');
+// Shared with src/lib/metadata.ts so both builds publish the same titles.
+const { pages: definitions, socialImageAlt } = await readJson('src/lib/page-metadata.json');
 const productionUrl = new URL(config.siteUrl);
 if (productionUrl.protocol !== 'https:' || productionUrl.username || productionUrl.password || productionUrl.search || productionUrl.hash || !['', '/'].includes(productionUrl.pathname)) {
   throw new Error('project-config.json: siteUrl must be a clean HTTPS origin.');
@@ -10,25 +13,17 @@ if (productionUrl.protocol !== 'https:' || productionUrl.username || productionU
 const origin = productionUrl.origin;
 const name = config.name || 'Stane';
 const privateBuild = config.sitePrivate !== false;
-const output = path.join(root, process.argv.includes('--dist') ? 'dist' : 'public');
 const distBuild = process.argv.includes('--dist');
+const output = path.join(root, distBuild ? 'dist' : 'public');
 const expiry = '2027-04-09T00:00:00Z';
 const email = config.securityEmail;
 if (email && (!/^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+$/.test(email) || /[\r\n]/.test(email))) throw new Error('Invalid securityEmail.');
 
 const exists = async (filename) => access(filename).then(() => true, () => false);
 const escapeHtml = (value) => String(value).replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char]);
-const escapeXml = escapeHtml;
-const definitions = {
-  '/': { title: `${name} — Ciberseguridad, OPSEC y protección de datos`, description: 'Protege lo que importa. Stane diseña estrategias de ciberseguridad, seguridad operacional y protección de información sensible.' },
-  '/security': { title: `Divulgación de vulnerabilidades — ${name}`, description: 'Canal de seguridad, alcance y recomendaciones para comunicar de forma responsable una vulnerabilidad a Stane.' },
-  '/privacy': { title: `Privacidad — ${name}`, description: 'Información sobre el tratamiento de datos, los servicios de terceros y el ejercicio de tus derechos en Stane.' },
-  '/tos': { title: `Condiciones de uso — ${name}`, description: 'Condiciones de uso del sitio informativo de StaneLabs, un proyecto en preparación sin contratación online.' },
-  '/purchase': { title: `Contratación — ${name}`, description: 'Estado de la contratación en StaneLabs: proyecto en preparación, sin compras, pagos ni pedidos online.' },
-};
 
 function metadata(route, hasSocialImage) {
-  const page = definitions[route] || { title: `${name} — Ciberseguridad y OPSEC`, description: definitions['/'].description };
+  const page = definitions[route] || definitions['/'];
   const canonical = `${origin}${route === '/' ? '/' : route}`;
   const organization = { '@type': 'Organization', '@id': `${origin}/#organization`, name, url: `${origin}/` };
   if (email) organization.contactPoint = { '@type': 'ContactPoint', contactType: 'security', email, availableLanguage: ['es'] };
@@ -36,7 +31,7 @@ function metadata(route, hasSocialImage) {
     '@context': 'https://schema.org',
     '@graph': [organization, { '@type': 'WebSite', '@id': `${origin}/#website`, name, url: `${origin}/`, inLanguage: 'es', publisher: { '@id': `${origin}/#organization` } }],
   };
-  const socialImage = hasSocialImage ? `\n    <meta property="og:image" content="${origin}/brand/social-card.png">\n    <meta property="og:image:alt" content="${escapeHtml(name)} — Protect what matters">\n    <meta name="twitter:image" content="${origin}/brand/social-card.png">` : '';
+  const socialImage = hasSocialImage ? `\n    <meta property="og:image" content="${origin}/brand/social-card.png">\n    <meta property="og:image:alt" content="${escapeHtml(socialImageAlt)}">\n    <meta name="twitter:image" content="${origin}/brand/social-card.png">` : '';
   return `<!-- SEO:START -->
     <title>${escapeHtml(page.title)}</title>
     <meta name="description" content="${escapeHtml(page.description)}">
@@ -90,8 +85,8 @@ for (const size of [192, 512]) {
 if (!icons.length && await exists(path.join(root, 'public', 'brand', 'favicon.svg'))) icons.push({ src: '/brand/favicon.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'any' });
 const manifest = { id: '/', name, short_name: name, description: definitions['/'].description, lang: 'es', start_url: '/', scope: '/', display: 'standalone', background_color: '#FFFFFF', theme_color: '#5d8fce', icons };
 const contacts = email ? [`Contact: mailto:${email}`, `Contact: ${origin}/security`] : [`Contact: ${origin}/security`];
-const securityTxt = [`# ${name} — responsible vulnerability disclosure`, ...contacts, `Expires: ${expiry}`, `Preferred-Languages: es`, `Canonical: ${origin}/.well-known/security.txt`, `Policy: ${origin}/security`, ''].join('\n');
-const sitemap = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${[...new Set(routes)].sort().map((route) => `  <url><loc>${escapeXml(`${origin}${route}${route === '/' ? '' : '/'}`)}</loc></url>`).join('\n')}\n</urlset>\n`;
+const securityTxt = [`# ${name}: responsible vulnerability disclosure`, ...contacts, `Expires: ${expiry}`, `Preferred-Languages: es`, `Canonical: ${origin}/.well-known/security.txt`, `Policy: ${origin}/security`, ''].join('\n');
+const sitemap = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${[...new Set(routes)].sort().map((route) => `  <url><loc>${escapeHtml(`${origin}${route}${route === '/' ? '' : '/'}`)}</loc></url>`).join('\n')}\n</urlset>\n`;
 
 await writeFile(path.join(output, 'manifest.webmanifest'), `${JSON.stringify(manifest, null, 2)}\n`, 'utf8');
 // Crawling remains allowed: a crawler must read HTML to observe the private build's noindex metadata.
@@ -99,5 +94,5 @@ await writeFile(path.join(output, 'robots.txt'), `User-agent: *\nAllow: /\n\nSit
 await writeFile(path.join(output, 'sitemap.xml'), sitemap, 'utf8');
 await writeFile(path.join(output, '.well-known', 'security.txt'), securityTxt, 'utf8');
 // Keep only /.well-known/security.txt as the canonical security disclosure file.
-await (async () => { if (await exists(path.join(output, 'security.txt'))) await (await import('node:fs/promises')).unlink(path.join(output, 'security.txt')); })();
+await rm(path.join(output, 'security.txt'), { force: true });
 console.log(`SEO prepared for ${origin}: ${routes.length} HTML page(s), manifest, robots, sitemap and security.txt (${privateBuild ? 'private / noindex' : 'public / index'}).`);

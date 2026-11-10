@@ -1,10 +1,11 @@
 import assert from 'node:assert/strict';
 import { readFile, access } from 'node:fs/promises';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { projectRoot as root } from './project-root.mjs';
 
-const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const config = JSON.parse(await readFile(path.join(root, 'project-config.json'), 'utf8'));
+const readJson = async (filename) => JSON.parse(await readFile(path.join(root, filename), 'utf8'));
+const config = await readJson('project-config.json');
+const { pages } = await readJson('src/lib/page-metadata.json');
 const dist = path.join(root, 'dist');
 const origin = new URL(config.siteUrl).origin;
 const read = (filename) => readFile(path.join(dist, filename), 'utf8');
@@ -23,12 +24,14 @@ assert.match(robots, /^User-agent: \*$/m);
 assert.match(robots, /^Allow: \/$/m);
 assert(robots.includes(`Sitemap: ${origin}/sitemap.xml`));
 const sitemap = await read('sitemap.xml');
-const requiredRoutes = ['/', '/security', '/privacy', '/tos', '/purchase'];
+const requiredRoutes = Object.keys(pages);
 for (const route of requiredRoutes) {
   assert(sitemap.includes(`<loc>${origin}${route}${route === '/' ? '' : '/'}</loc>`), `Sitemap missing ${route}.`);
   const filename = route === '/' ? 'index.html' : `${route.slice(1)}/index.html`;
   const html = await read(filename);
   assert.match(html, /<html[^>]*lang="es"/, `${route}: Spanish document language missing.`);
+  assert(html.includes(`<title>${pages[route].title}</title>`), `${route}: title mismatches page-metadata.json.`);
+  assert(!html.includes('\u2014'), `${route}: em dash in published HTML.`);
   assert(html.includes(`<link rel="canonical" href="${origin}${route}${route === '/' ? '' : '/'}"`), `${route}: canonical URL missing.`);
   assert(html.includes(`<meta name="robots" content="${config.sitePrivate !== false ? 'noindex, follow' : 'index, follow'}"`), `${route}: indexing directive mismatches configuration.`);
   assert.match(html, /<meta name="description" content="[^"]{40,}"/, `${route}: description missing.`);

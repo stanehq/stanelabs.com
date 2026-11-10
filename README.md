@@ -10,7 +10,7 @@ El titular y la escultura entran en un segundo; el titular nunca parte de opacid
 
 ## Arquitectura
 
-- **Frontend:** Next.js 16 y React 19, con exportación estática. Tailwind CSS 4, componentes shadcn/ui basados en Radix y 15 SVG inline derivados de Feather (licencia MIT incluida). TikTok Sans para títulos y Geist para texto e interfaz, autoalojadas con `next/font/local` y licencias OFL incluidas en `src/fonts/`. La compilación y la navegación no necesitan Google Fonts.
+- **Frontend:** Next.js 16 y React 19, con exportación estática. Tailwind CSS 4, componentes shadcn/ui basados en Radix y 12 SVG inline derivados de Feather (licencia MIT incluida). TikTok Sans para títulos y Geist para texto e interfaz, autoalojadas con `next/font/local` y licencias OFL incluidas en `src/fonts/`. La compilación y la navegación no necesitan Google Fonts.
 - **Vista visual:** Vite utiliza los mismos componentes de `src/` para revisar el diseño; la compilación de producción del frontend usa Next.js.
 - **API:** NestJS 11 sobre Express. Sirve los archivos estáticos compilados y la API de contacto en el mismo proceso Node.js. Incluye validación, límites de solicitudes, cabeceras de seguridad y envío SMTP.
 
@@ -108,20 +108,20 @@ También se puede usar una configuración Compose de despliegue que declare `ima
 
 El workflow de `.github/workflows/ci.yml` valida PRs, `main` y etiquetas `vX.Y.Z`. Construye una sola imagen `linux/amd64`, bloquea vulnerabilidades HIGH/CRITICAL y publica en GHCR privado únicamente tras los checks. La transferencia usa el archivo OCI escaneado y exige conservar su digest. Las firmas nativas de GitHub vinculan imagen, SBOM y archivos de distribución con el repo, workflow y commit; los aliases de lanzamiento se promueven después de verificar las firmas. El repositorio existente `stanehq/stanelabs.com` es público: sus informes y artefactos de Actions siguen esa visibilidad y sus firmas usan Sigstore público. Mantener el paquete GHCR privado no vuelve privados esos artefactos ni los metadatos de firma.
 
-Configura el environment `ghcr`, protecciones de rama/tags y permisos del paquete antes del primer push de publicación. [La guía de CI](.github/CI.md) describe los pins, comprobaciones, informes, attestations y comandos de verificación. La copia local no configura esos permisos externos ni acredita una ejecución de GitHub.
+Configura el environment `ghcr`, protecciones de rama/tags y permisos del paquete antes del primer push de publicación. Los workflows de `.github/workflows/` y los scripts de `scripts/ci/` definen los pins, comprobaciones, informes y attestations. La copia local no configura esos permisos externos ni acredita una ejecución de GitHub.
 
-Para desplegar desde GHCR, autentica Docker con acceso de lectura al paquete privado, verifica su attestation siguiendo esa guía y usa el **digest verificado**:
+Para desplegar desde GHCR, autentica Docker con acceso de lectura al paquete privado, verifica su attestation con `gh attestation verify` y usa el **digest verificado**:
 
 ```sh
 docker pull ghcr.io/OWNER/REPO@sha256:DIGEST
 docker run -d --name stanelabs --restart unless-stopped --env-file .env -p 127.0.0.1:3001:3001 --read-only --tmpfs /tmp --cap-drop ALL --security-opt no-new-privileges:true --init ghcr.io/OWNER/REPO@sha256:DIGEST
 ```
 
-El VPS recibe solo la imagen compilada y su configuración; no ejecuta compiladores ni necesita instalar dependencias. Los tests locales se ejecutan con `npm run ci:check`; las pruebas del archivo OCI usan Python y están documentadas en la guía.
+El VPS recibe solo la imagen compilada y su configuración; no ejecuta compiladores ni necesita instalar dependencias. Los tests locales se ejecutan con `npm run ci:check`; las pruebas del archivo OCI usan Python y se ejecutan con `npm run test:artifacts`.
 
 ## SEO y publicación
 
-Los datos de publicación viven en `project-config.json`: nombre, dominio oficial, correos y `sitePrivate`. `scripts/seo.mjs` prepara los archivos públicos y metadatos; su modo `--dist` adapta las páginas exportadas y genera el sitemap a partir de las rutas HTML compiladas. El sitio incluye URLs canónicas, Open Graph, Twitter y datos estructurados `Organization` y `WebSite`.
+Los datos de publicación viven en `project-config.json`: nombre, dominio oficial, correos y `sitePrivate`. Los títulos y descripciones de cada página se definen una sola vez en `src/lib/page-metadata.json`, con el formato `Stane: …`. `scripts/seo.mjs` prepara los archivos públicos y metadatos; su modo `--dist` adapta las páginas exportadas y genera el sitemap a partir de las rutas HTML compiladas. El sitio incluye URLs canónicas, Open Graph, Twitter y datos estructurados `Organization` y `WebSite`.
 
 StaneLabs aún no está constituido. Las páginas `/privacy`, `/security`, `/tos` y `/purchase` describen la fase informativa, el contacto y los límites del sitio; no inventan identidad fiscal ni ofrecen pagos o contratación online. La nota de privacidad no sustituye la identificación completa del responsable y los proveedores/plazos reales pendientes de concretar antes de un lanzamiento.
 

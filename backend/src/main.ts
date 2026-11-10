@@ -44,7 +44,8 @@ async function bootstrap(): Promise<void> {
     }));
   }
   app.enableShutdownHooks();
-  await app.listen(config.get<number>('PORT') || 3001, config.get<string>('HOST') || '0.0.0.0');
+  // PORT and HOST are defaulted by validateEnvironment.
+  await app.listen(config.getOrThrow<number>('PORT'), config.getOrThrow<string>('HOST'));
 }
 
 bootstrap().catch(() => { console.error('El backend no pudo iniciar. Revisa la configuración del entorno.'); process.exit(1); });

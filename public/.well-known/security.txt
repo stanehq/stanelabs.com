@@ -1,4 +1,4 @@
-# Stane — responsible vulnerability disclosure
+# Stane: responsible vulnerability disclosure
 Contact: mailto:security@stanelabs.com
 Contact: https://www.stanelabs.com/security
 Expires: 2027-04-09T00:00:00Z
