@@ -48,7 +48,8 @@ const questions: { question: string; answer: string; link?: { href: string; labe
 
 const stepNumber = (index: number) => `0${index + 1}`;
 
-// `data-build` marks the blocks that IntroExperience assembles on scroll.
+// `data-build` marks the blocks that IntroExperience assembles on scroll; its value
+// is the layer type shown in the editor tag (heading, text, button, image or frame).
 
 /** Keeps fragments from earlier versions of the page pointing at the current section. */
 function LegacyAnchor({ id }: { id: string }) {
@@ -60,18 +61,18 @@ function Hero() {
     <section className="hero-shell" aria-labelledby="hero-heading">
       <div className="container hero">
         <div className="hero-copy">
-          <p className="eyebrow" data-build="hero"><span className="eyebrow-dot" />ESTUDIO DE CIBERSEGURIDAD Y OPSEC</p>
-          <h1 id="hero-heading" className="hero-title" data-build="hero">
+          <p className="eyebrow" data-build="text"><span className="eyebrow-dot" />ESTUDIO DE CIBERSEGURIDAD Y OPSEC</p>
+          <h1 id="hero-heading" className="hero-title" data-build="heading">
             <span>Tus datos.</span>
             <span>Tu identidad.</span>
             <span className="hero-title-accent">Tu control.</span>
           </h1>
-          <p className="hero-description" data-build="hero">Entiende tu exposición.<br />Protege lo que importa, con criterio.</p>
-          <div className="hero-actions" data-build="hero">
+          <p className="hero-description" data-build="text">Entiende tu exposición.<br />Protege lo que importa, con criterio.</p>
+          <div className="hero-actions" data-build="button">
             <a className="text-link" href="#servicios">Explorar especialidades<Icon name="arrow-down" size={16} /></a>
           </div>
         </div>
-        <div className="hero-art" aria-hidden="true" data-build="hero">
+        <div className="hero-art" aria-hidden="true" data-build="image">
           <Suspense fallback={null}><LiquidField /></Suspense>
         </div>
       </div>
@@ -83,7 +84,7 @@ function ServiceCard({ service, index }: { service: Service; index: number }) {
   const headingId = `heading-${service.id}`;
   const selectTopic = () => window.dispatchEvent(new CustomEvent(CONTACT_TOPIC_EVENT, { detail: service.title }));
   return (
-    <article id={service.id} className="service-card" aria-labelledby={headingId} data-build="">
+    <article id={service.id} className="service-card" aria-labelledby={headingId} data-build="frame">
       <LegacyAnchor id={`service-panel-${service.id}`} />
       <div className="service-top">
         <span className="service-icon"><Icon name={service.icon} size={20} /></span>
@@ -110,7 +111,7 @@ function Services() {
   return (
     <section id="servicios" className="services-section container" aria-labelledby="services-heading">
       <LegacyAnchor id="panel-especialidades" />
-      <div className="section-heading" data-build="">
+      <div className="section-heading" data-build="heading">
         <div>
           <p className="section-label">ESPECIALIDADES</p>
           <h2 id="services-heading">Tres perspectivas. <span>Una misma defensa.</span></h2>
@@ -119,7 +120,7 @@ function Services() {
       <div className="service-grid">
         {services.map((service, index) => <ServiceCard key={service.id} service={service} index={index} />)}
       </div>
-      <div id="enfoque" className="approach-panel" aria-labelledby="approach-heading" data-build="">
+      <div id="enfoque" className="approach-panel" aria-labelledby="approach-heading" data-build="frame">
         <LegacyAnchor id="panel-enfoque" />
         <LegacyAnchor id="entregables" />
         <LegacyAnchor id="panel-entregables" />
@@ -144,7 +145,7 @@ function Contact() {
   return (
     <section className="contact-section">
       <div className="container contact-layout">
-        <div className="contact-intro" data-build="">
+        <div className="contact-intro" data-build="frame">
           <p className="section-label">CONTACTO</p>
           <h2>Tu consulta, <span>el primer paso.</span></h2>
           <p className="contact-lead">Cuéntanos qué quieres proteger o aclarar. Una descripción general es suficiente para empezar.</p>
@@ -153,7 +154,7 @@ function Contact() {
             <span>{config.contactEmail}<Icon name="arrow-up-right" size={20} /></span>
           </a>
         </div>
-        <div id="preguntas" className="contact-questions" aria-labelledby="questions-heading" data-build="">
+        <div id="preguntas" className="contact-questions" aria-labelledby="questions-heading" data-build="frame">
           <LegacyAnchor id="panel-preguntas" />
           <h3 id="questions-heading" className="questions-title">Antes de escribirnos</h3>
           <div className="faq-list">
