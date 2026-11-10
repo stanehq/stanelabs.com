@@ -162,9 +162,8 @@ html:has(.intro[data-phase="loading"]) :is(.hero-title, .hero-art) { animation-p
 .intro-status span { grid-area: 1 / 1; opacity: 0; animation: intro-status 1333ms ease both; }
 .intro-status span:nth-child(2) { animation-delay: 1333ms; }
 .intro-status span:nth-child(3) { animation: intro-status-last 500ms ease 2666ms both; }
-/* Blocks stay hidden until a cursor builds them; the hero only on a first visit. */
-html:has(.intro[data-mode]) [data-build]:not([data-build="hero"], [data-built]),
-html:has(.intro[data-mode="full"]) [data-build="hero"]:not([data-built]) { opacity: 0 !important; }
+/* Blocks stay hidden until a cursor builds them. */
+html:has(.intro[data-mode="build"]) [data-build]:not([data-built]) { opacity: 0 !important; }
 .build-stage { position: absolute; inset: 0; z-index: 40; overflow: hidden; pointer-events: none; }
 .build-outline, .build-cursor-x { position: absolute; top: 0; left: 0; }
 .build-outline { border: 1.5px solid var(--peer); border-radius: 2px; background: color-mix(in srgb, var(--peer) 6%, transparent); opacity: 0; transition: opacity 240ms ease, width 520ms var(--ease-studio), height 520ms var(--ease-studio); }

@@ -5,7 +5,7 @@ import { useEffect, useRef, type CSSProperties } from 'react';
 /**
  * Entry experience for the homepage.
  *
- * 1. Loader: a full-screen cover shown once per session for at least four seconds.
+ * 1. Loader: a full-screen cover shown on every visit for at least four seconds.
  * 2. Scroll build: as each `[data-build]` block scrolls into view, a collaborator's
  *    cursor drags out a frame around it and the block fades in, as if the page
  *    were being assembled in a design tool.
@@ -15,12 +15,10 @@ import { useEffect, useRef, type CSSProperties } from 'react';
  * component never re-renders.
  *
  * Root attributes: `data-phase` (loading → leaving → done) controls the loader;
- * `data-mode` enables the build ("full" also builds the hero, "scroll" leaves it
- * visible on repeat visits so the first paint is not delayed).
+ * `data-mode="build"` hides the blocks until a cursor builds them.
  */
 
 const ROOT_ID = 'intro';
-const SEEN_KEY = 'stane:intro-seen';
 const LOADER_MIN_MS = 4000;
 const LOADER_EXIT_MS = 700;
 const FAILSAFE_MS = 10000;
@@ -40,22 +38,16 @@ const engineers = ['Alex', 'Sarah', 'Daniel', 'Olivia', 'Marcus'];
 // Runs while the HTML is parsed, before the first paint, so neither the loader
 // nor the hidden blocks flash. The timeout releases the page if the application
 // script never takes over. Keep in sync with `prepare` below.
-const bootScript = `(function(){var e=document.getElementById('${ROOT_ID}');if(!e)return;e.dataset.boot='1';try{var s=sessionStorage.getItem('${SEEN_KEY}');if(!s)e.dataset.phase='loading';if(!matchMedia('(prefers-reduced-motion: reduce)').matches)e.dataset.mode=s?'scroll':'full';setTimeout(function(){if(e.dataset.ready)return;delete e.dataset.mode;if(e.dataset.phase==='loading')e.dataset.phase='done'},${FAILSAFE_MS})}catch(_){}})();`;
+const bootScript = `(function(){var e=document.getElementById('${ROOT_ID}');if(!e)return;e.dataset.boot='1';e.dataset.phase='loading';if(!matchMedia('(prefers-reduced-motion: reduce)').matches)e.dataset.mode='build';setTimeout(function(){if(e.dataset.ready)return;delete e.dataset.mode;e.dataset.phase='done'},${FAILSAFE_MS})})();`;
 
 /** Same decision as the boot script, for renders without prerendered HTML (the Vite preview). */
 function prepare(root: HTMLElement) {
-  try {
-    const seen = sessionStorage.getItem(SEEN_KEY);
-    if (!seen) root.dataset.phase = 'loading';
-    if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) root.dataset.mode = seen ? 'scroll' : 'full';
-  } catch { /* Storage unavailable: skip the experience. */ }
-}
-function rememberSeen() {
-  try { sessionStorage.setItem(SEEN_KEY, '1'); } catch { /* The loader simply plays again. */ }
+  root.dataset.phase = 'loading';
+  if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) root.dataset.mode = 'build';
 }
 
 /** Builds each target the first time it scrolls into view. Returns a function that stops it. */
-function startBuilder(stage: HTMLElement, includeHero: boolean) {
+function startBuilder(stage: HTMLElement) {
   const timers = new Set<number>();
   const later = (delay: number, task: () => void) => {
     const id = window.setTimeout(() => { timers.delete(id); task(); }, delay);
@@ -149,8 +141,7 @@ function startBuilder(stage: HTMLElement, includeHero: boolean) {
       build(entry.target);
     }
   }, { threshold: .15, rootMargin: '0px 0px -6% 0px' });
-  const selector = includeHero ? '[data-build]:not([data-built])' : '[data-build]:not([data-build="hero"]):not([data-built])';
-  document.querySelectorAll(selector).forEach(target => observer.observe(target));
+  document.querySelectorAll('[data-build]').forEach(target => observer.observe(target));
 
   return () => {
     observer.disconnect();
@@ -177,7 +168,7 @@ export function IntroExperience() {
     const later = (delay: number, task: () => void) => { timers.push(window.setTimeout(task, delay)); };
     let stopBuilder = () => {};
     const build = () => {
-      if (root.dataset.mode) stopBuilder = startBuilder(stage, root.dataset.mode === 'full');
+      if (root.dataset.mode) stopBuilder = startBuilder(stage);
     };
     const blockScroll = (event: Event) => event.preventDefault();
     const releaseScroll = () => {
@@ -185,7 +176,6 @@ export function IntroExperience() {
     };
     const leave = () => {
       root.dataset.phase = 'leaving';
-      rememberSeen();
       releaseScroll();
       later(LOADER_EXIT_MS / 2, build);
       later(LOADER_EXIT_MS, () => { root.dataset.phase = 'done'; });
@@ -193,14 +183,10 @@ export function IntroExperience() {
     // The minimum counts from navigation start, so a slow page load adds no extra wait.
     const reveal = () => later(Math.max(0, LOADER_MIN_MS - performance.now()), leave);
 
-    if (root.dataset.phase === 'loading') {
-      // iOS Safari can still pan a page whose root has overflow hidden.
-      for (const type of SCROLL_EVENTS) window.addEventListener(type, blockScroll, { passive: false });
-      if (document.readyState === 'complete') reveal();
-      else window.addEventListener('load', reveal, { once: true });
-    } else {
-      build();
-    }
+    // iOS Safari can still pan a page whose root has overflow hidden.
+    for (const type of SCROLL_EVENTS) window.addEventListener(type, blockScroll, { passive: false });
+    if (document.readyState === 'complete') reveal();
+    else window.addEventListener('load', reveal, { once: true });
 
     return () => {
       timers.forEach(timer => window.clearTimeout(timer));
