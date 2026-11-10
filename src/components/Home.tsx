@@ -62,10 +62,10 @@ function Hero() {
       <div className="container hero">
         <div className="hero-copy">
           <p className="eyebrow" data-build="text"><span className="eyebrow-dot" />ESTUDIO DE CIBERSEGURIDAD Y OPSEC</p>
-          <h1 id="hero-heading" className="hero-title" data-build="heading">
-            <span>Tus datos.</span>
-            <span>Tu identidad.</span>
-            <span className="hero-title-accent">Tu control.</span>
+          <h1 id="hero-heading" className="hero-title">
+            <span data-build="heading">Tus datos.</span>
+            <span data-build="heading">Tu identidad.</span>
+            <span className="hero-title-accent" data-build="heading">Tu control.</span>
           </h1>
           <p className="hero-description" data-build="text">Entiende tu exposición.<br />Protege lo que importa, con criterio.</p>
           <div className="hero-actions" data-build="button">
@@ -86,7 +86,7 @@ function ServiceCard({ service, index }: { service: Service; index: number }) {
   return (
     <article id={service.id} className="service-card" aria-labelledby={headingId} data-build="frame">
       <LegacyAnchor id={`service-panel-${service.id}`} />
-      <div className="service-top">
+      <div className="service-top" data-build="heading">
         <span className="service-icon"><Icon name={service.icon} size={20} /></span>
         <div>
           <p className="service-context">{service.context}</p>
@@ -94,11 +94,11 @@ function ServiceCard({ service, index }: { service: Service; index: number }) {
         </div>
         <span className="service-number">{stepNumber(index)}</span>
       </div>
-      <p className="service-summary">{service.summary}</p>
+      <p className="service-summary" data-build="text">{service.summary}</p>
       <ul className="service-points">
         {service.items.map(item => <li key={item}><Icon name="check" size={16} />{item}</li>)}
       </ul>
-      <div className="service-result"><Icon name="file-text" size={16} /><p>{service.deliverable}</p></div>
+      <div className="service-result" data-build="frame"><Icon name="file-text" size={16} /><p>{service.deliverable}</p></div>
       <a className="text-link service-link" href={CONTACT_HASH} onClick={selectTopic}>
         Hablemos de esta área
         <Icon name="arrow-up-right" size={16} />
@@ -124,7 +124,7 @@ function Services() {
         <LegacyAnchor id="panel-enfoque" />
         <LegacyAnchor id="entregables" />
         <LegacyAnchor id="panel-entregables" />
-        <div className="approach-heading">
+        <div className="approach-heading" data-build="heading">
           <p className="section-label">CÓMO TRABAJAMOS · QUÉ RECIBES</p>
           <h2 id="approach-heading">De tu contexto a un plan.</h2>
         </div>
@@ -145,18 +145,18 @@ function Contact() {
   return (
     <section className="contact-section">
       <div className="container contact-layout">
-        <div className="contact-intro" data-build="frame">
-          <p className="section-label">CONTACTO</p>
-          <h2>Tu consulta, <span>el primer paso.</span></h2>
-          <p className="contact-lead">Cuéntanos qué quieres proteger o aclarar. Una descripción general es suficiente para empezar.</p>
-          <a className="contact-email" href={`mailto:${config.contactEmail}`}>
+        <div className="contact-intro">
+          <p className="section-label" data-build="text">CONTACTO</p>
+          <h2 data-build="heading">Tu consulta, <span>el primer paso.</span></h2>
+          <p className="contact-lead" data-build="text">Cuéntanos qué quieres proteger o aclarar. Una descripción general es suficiente para empezar.</p>
+          <a className="contact-email" href={`mailto:${config.contactEmail}`} data-build="button">
             <span className="contact-email-label">Escríbenos directamente</span>
             <span>{config.contactEmail}<Icon name="arrow-up-right" size={20} /></span>
           </a>
         </div>
         <div id="preguntas" className="contact-questions" aria-labelledby="questions-heading" data-build="frame">
           <LegacyAnchor id="panel-preguntas" />
-          <h3 id="questions-heading" className="questions-title">Antes de escribirnos</h3>
+          <h3 id="questions-heading" className="questions-title" data-build="text">Antes de escribirnos</h3>
           <div className="faq-list">
             {questions.map(({ question, answer, link }) => (
               <article key={question} className="faq-entry">

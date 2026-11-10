@@ -25,6 +25,7 @@
   --build-peer-3: #EC4899;
   --build-peer-4: #F59E0B;
   --build-peer-5: #10B981;
+  --build-peer-6: #0EA5E9;
   color-scheme: light;
 }
 
@@ -144,29 +145,12 @@ input::placeholder, textarea::placeholder { color: var(--muted); opacity: 1; } t
 .legal-header, .legal-content { max-width: 880px; margin-inline: auto; }
 .legal-header { margin-top: 32px; padding-bottom: 40px; border-bottom: 1px solid var(--border); } .legal-header h1 { margin-top: 20px; font-size: 36px; } .legal-header > p:not(.section-label) { margin-top: 20px; color: var(--muted); line-height: 1.8; } .legal-meta { display: block; margin-top: 16px; color: var(--muted); font-size: 14px; }
 .legal-section { padding-top: 32px; } .legal-section h2 { font-size: 23px; margin-bottom: 16px; } .legal-section p { color: var(--muted); line-height: 1.85; } .legal-section p + p { margin-top: 16px; }
-/* Entry experience: loader, then blocks assembled on scroll (IntroExperience.tsx). */
-.intro { position: fixed; inset: 0; z-index: 200; display: none; overflow: hidden; pointer-events: none; }
-.intro[data-phase="loading"], .intro[data-phase="leaving"] { display: block; }
 /* The scrollbar returns while the loader still covers the page, so nothing visibly shifts. */
-html:has(.intro[data-phase="loading"]) { overflow: hidden; overscroll-behavior: none; }
-html:has(.intro[data-phase="loading"]) :is(.hero-title, .hero-art) { animation-play-state: paused; }
-.intro-loader { position: absolute; inset: 0; display: grid; place-items: center; color: var(--background); background: var(--foreground); opacity: 0; transition: opacity 700ms ease; }
-.intro[data-phase="loading"] .intro-loader { opacity: 1; pointer-events: auto; touch-action: none; transition: none; }
-.intro-loader-body { display: flex; flex-direction: column; align-items: center; gap: 28px; padding: 24px; transition: transform 700ms var(--ease-studio); }
-.intro[data-phase="leaving"] .intro-loader-body { transform: translateY(-10px); }
-.intro-brand { display: flex; align-items: center; gap: 10px; font-family: var(--font-heading); font-size: 26px; font-weight: 500; line-height: 1; letter-spacing: -.025em; animation: intro-rise 900ms var(--ease-studio) both; }
-.intro-brand-period { color: var(--primary); }
-.intro-progress { width: 168px; height: 2px; overflow: hidden; border-radius: 2px; background: color-mix(in srgb, var(--background) 14%, transparent); }
-.intro-progress span { display: block; height: 100%; background: var(--primary); transform-origin: left; animation: intro-progress 4s cubic-bezier(.3, .6, .2, 1) both; }
-.intro-status { display: grid; justify-items: center; color: color-mix(in srgb, var(--background) 68%, transparent); font-size: 14px; letter-spacing: .01em; text-align: center; }
-.intro-status span { grid-area: 1 / 1; opacity: 0; animation: intro-status 1333ms ease both; }
-.intro-status span:nth-child(2) { animation-delay: 1333ms; }
-.intro-status span:nth-child(3) { animation: intro-status-last 500ms ease 2666ms both; }
-/* Blocks stay hidden until a cursor builds them. */
-html:has(.intro[data-mode="build"]) [data-build]:not([data-built]) { opacity: 0 !important; }
-.build-stage { position: absolute; inset: 0; z-index: 40; overflow: hidden; pointer-events: none; }
+/* Entry experience: blocks stay hidden until a collaborator's cursor builds them (IntroExperience.tsx). */
+html:has(.build-flag[data-mode="build"]) [data-build]:not([data-built]) { opacity: 0 !important; }
+.build-stage { position: absolute; inset: 0; z-index: 60; overflow: hidden; pointer-events: none; }
 .build-outline, .build-cursor-x, .build-caret, .build-guide-h, .build-guide-v { position: absolute; top: 0; left: 0; }
-.build-outline { border: 1.5px solid var(--peer); border-radius: 2px; background: color-mix(in srgb, var(--peer) 6%, transparent); opacity: 0; transition: opacity 260ms ease, width var(--build-draw, 950ms) var(--ease-studio), height var(--build-draw, 950ms) var(--ease-studio); }
+.build-outline { border: 1.5px solid var(--peer); border-radius: 2px; background: color-mix(in srgb, var(--peer) 6%, transparent); opacity: 0; transition: opacity 260ms ease, transform 550ms var(--ease-studio), width var(--build-draw, 1000ms) var(--ease-studio), height var(--build-draw, 1000ms) var(--ease-studio); }
 .build-outline[data-visible] { opacity: 1; }
 .build-handle { position: absolute; width: 7px; height: 7px; border: 1.5px solid var(--peer); background: white; }
 .build-handle:nth-child(2) { top: -4px; left: -4px; } .build-handle:nth-child(3) { top: -4px; right: -4px; } .build-handle:nth-child(4) { bottom: -4px; left: -4px; } .build-handle:nth-child(5) { bottom: -4px; right: -4px; }
@@ -177,26 +161,14 @@ html:has(.intro[data-mode="build"]) [data-build]:not([data-built]) { opacity: 0 
 .build-guide-h, .build-guide-v { background: var(--peer); opacity: 0; transition: opacity 240ms ease, transform 420ms var(--ease-studio); }
 .build-guide-h { width: 100%; height: 1px; } .build-guide-v { width: 1px; height: 100%; }
 .build-guide-h[data-on], .build-guide-v[data-on] { opacity: .55; }
-.build-caret { width: 2px; background: var(--peer); opacity: 0; transition: transform var(--build-sweep, 1200ms) cubic-bezier(.45, 0, .25, 1); }
+.build-caret { width: 2px; background: var(--peer); opacity: 0; transition: transform 1500ms cubic-bezier(.45, 0, .25, 1); }
 .build-caret[data-on] { opacity: 1; animation: build-blink 900ms steps(1) infinite; }
-.build-cursor-x { transition: transform 750ms cubic-bezier(.45, 0, .25, 1); }
-.build-cursor-y { transition: transform 750ms var(--ease-studio); }
+.build-cursor-x { transition: transform 950ms cubic-bezier(.45, 0, .25, 1); }
+.build-cursor-y { transition: transform 950ms var(--ease-studio); }
 .build-cursor { display: block; color: var(--peer); opacity: 0; transform: scale(.85); transform-origin: top left; transition: opacity 300ms ease, transform 300ms var(--ease-studio); filter: drop-shadow(0 2px 4px rgba(17, 24, 39, .2)); }
 .build-peer[data-active] .build-cursor { opacity: 1; transform: scale(1); }
-/* Editor toolbar with live presence, pinned to the viewport while anyone is editing. */
-.build-dock { position: fixed; bottom: 20px; left: 50%; display: flex; align-items: center; gap: 4px; padding: 6px 12px 6px 6px; border: 1px solid var(--glass-border); border-radius: 16px; background: rgba(255, 255, 255, .94); box-shadow: 0 8px 32px rgba(30, 55, 85, .12); color: var(--muted); font-size: 12px; opacity: 0; transform: translate(-50%, 8px); transition: opacity 300ms ease, transform 300ms var(--ease-studio); }
 .build-stage:has(.build-peer[data-active]) .build-dock { opacity: 1; transform: translate(-50%, 0); }
-.build-tool { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 10px; transition: background 200ms ease, color 200ms ease; }
-.build-dock[data-tool="move"] .build-tool[data-tool="move"], .build-dock[data-tool="frame"] .build-tool[data-tool="frame"], .build-dock[data-tool="text"] .build-tool[data-tool="text"] { color: var(--primary-foreground); background: var(--primary); }
-.build-dock-divider { width: 1px; height: 20px; margin: 0 8px; background: var(--border); }
-.build-presence { display: flex; } .build-presence span { width: 18px; height: 18px; margin-left: -5px; border: 2px solid white; border-radius: 50%; } .build-presence span:first-child { margin-left: 0; }
-.build-live { display: inline-flex; align-items: center; gap: 6px; margin-left: 10px; font-weight: 500; } .build-live::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: #10B981; animation: build-pulse 1.6s ease-in-out infinite; }
 @keyframes build-blink { 50% { opacity: 0; } }
-@keyframes build-pulse { 50% { opacity: .35; } }
-@keyframes intro-rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
-@keyframes intro-progress { from { transform: scaleX(0); } to { transform: scaleX(.94); } }
-@keyframes intro-status { 0% { opacity: 0; transform: translateY(4px); } 18%, 82% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-4px); } }
-@keyframes intro-status-last { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes hero-enter { from { transform: translateY(8px); } to { transform: translateY(0); } }
 @keyframes sculpture-enter { from { opacity: .55; transform: scale(.94); } to { opacity: 1; transform: scale(1); } }
 @media (max-width: 1100px) {
@@ -245,6 +217,5 @@ html:has(.intro[data-mode="build"]) [data-build]:not([data-built]) { opacity: 0 
 }
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
-  .intro-status span { animation: none; } .intro-status span:first-child { opacity: 1; }
   *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
 }

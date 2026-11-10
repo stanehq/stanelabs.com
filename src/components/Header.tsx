@@ -89,19 +89,19 @@ export function Header({ home }: { home: boolean }) {
 
   return (
     <header ref={headerRef} className="site-header">
-      <div className="header-inner">
-        <Brand />
-        <nav className="desktop-nav" aria-label="Navegación principal">
+      <div className="header-inner" data-build="frame">
+        <Brand build="image" />
+        <nav className="desktop-nav" aria-label="Navegación principal" data-build="text">
           {sectionLinks.map(([id, label]) => (
             <a key={id} href={sectionHref(id)} className="nav-link">{label}</a>
           ))}
         </nav>
         <div className="header-end">
-          <Button ref={contactButtonRef} type="button" size="sm" className="header-contact" aria-expanded={contactOpen} aria-controls="contacto" onClick={toggleContact}>
+          <Button ref={contactButtonRef} type="button" size="sm" className="header-contact" data-build="button" aria-expanded={contactOpen} aria-controls="contacto" onClick={toggleContact}>
             Contactarnos
             <Icon name={contactOpen ? 'x' : 'plus'} size={16} />
           </Button>
-          <Button type="button" size="icon" className="menu-button" aria-expanded={menuOpen} aria-controls="mobile-menu" aria-label={menuOpen ? 'Cerrar menú' : 'Abrir menú'} onClick={toggleMenu}>
+          <Button type="button" size="icon" className="menu-button" data-build="button" aria-expanded={menuOpen} aria-controls="mobile-menu" aria-label={menuOpen ? 'Cerrar menú' : 'Abrir menú'} onClick={toggleMenu}>
             <Icon name={menuOpen ? 'x' : 'menu'} />
           </Button>
         </div>

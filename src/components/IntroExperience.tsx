@@ -3,57 +3,57 @@
 import { useEffect, useRef, type CSSProperties } from 'react';
 
 /**
- * Entry experience for the homepage.
+ * Entry experience for the homepage: the page is "built" in front of the visitor,
+ * as if a team were designing it live in a multiplayer editor. Every block marked
+ * with `data-build` starts hidden; when it scrolls into view a collaborator's
+ * cursor drags out a frame around it, types or drops its content in and then
+ * adjusts it, with alignment guides and layer tags along the way.
  *
- * 1. Loader: a full-screen cover shown on every visit for at least four seconds.
- * 2. Scroll build: as each `[data-build]` block scrolls into view, a collaborator's
- *    cursor drags out a frame around it and the block fades in, as if the page
- *    were being assembled in a design tool.
- *
- * Everything is drawn on overlay layers; the page's content and layout are never
+ * Everything is drawn on an overlay layer; the page's content and layout are never
  * changed. State lives in data attributes and is driven imperatively, so the
- * component never re-renders.
- *
- * Root attributes: `data-phase` (loading → leaving → done) controls the loader;
- * `data-mode="build"` hides the blocks until a cursor builds them.
+ * component never re-renders. `data-mode="build"` on the flag element hides the
+ * blocks until a cursor builds them; without it (reduced motion, no JavaScript)
+ * the page is simply visible.
  */
 
-const ROOT_ID = 'intro';
-const LOADER_MIN_MS = 4000;
-const LOADER_EXIT_MS = 700;
-const FAILSAFE_MS = 10000;
-const SCROLL_EVENTS = ['wheel', 'touchmove'] as const;
+const FLAG_ID = 'build-flag';
+const FAILSAFE_MS = 8000;
 
-const TRAVEL_MS = 750;
-const DRAW_MS = 950;
-const SWEEP_MS = 1200;
-const REVEAL_MS = 800;
-const HOLD_MS = 1100;
-const STAGGER_MS = 280;
-const IDLE_MS = 2400;
+const MIN_TRAVEL_MS = 700;
+const MAX_TRAVEL_MS = 1300;
+const SWEEP_MS = 1500;
+const REVEAL_MS = 950;
+const ADJUST_MS = 1000;
+const HOLD_MS = 250;
+const STAGGER_MS = 380;
+const WANDER_MS = 1700;
+const WANDER_STEPS = 2;
+/** A block still waiting for a free cursor after this long is shown without ceremony. */
+const QUEUE_LIMIT_MS = 18000;
+/** With a long queue the cursors speed up, but never below this share of their normal pace. */
+const MIN_PACE = .6;
 /** Room kept to the right of a cursor so it stays on screen. */
 const CURSOR_ROOM_PX = 36;
 
-const PEERS = 5;
+const PEERS = 6;
 const TEXT_KINDS = new Set(['heading', 'text']);
+/** Text is typed in and left alone; frames, images and buttons get nudged into place. */
+const ADJUSTABLE_KINDS = new Set(['frame', 'image', 'button']);
 const KIND_LABELS: Record<string, string> = { heading: 'Heading', text: 'Text', button: 'Button', image: 'Image', frame: 'Frame' };
 
-// Runs while the HTML is parsed, before the first paint, so neither the loader
-// nor the hidden blocks flash. The timeout releases the page if the application
-// script never takes over. Keep in sync with `prepare` below.
-const bootScript = `(function(){var e=document.getElementById('${ROOT_ID}');if(!e)return;e.dataset.boot='1';e.dataset.phase='loading';if(!matchMedia('(prefers-reduced-motion: reduce)').matches)e.dataset.mode='build';setTimeout(function(){if(e.dataset.ready)return;delete e.dataset.mode;e.dataset.phase='done'},${FAILSAFE_MS})})();`;
+// Runs while the HTML is parsed, before the first paint, so the blocks never flash.
+// The timeout releases the page if the application script never takes over.
+const bootScript = `(function(){var e=document.getElementById('${FLAG_ID}');if(!e)return;e.dataset.boot='1';if(!matchMedia('(prefers-reduced-motion: reduce)').matches)e.dataset.mode='build';setTimeout(function(){if(!e.dataset.ready)delete e.dataset.mode},${FAILSAFE_MS})})();`;
 
 /** Same decision as the boot script, for renders without prerendered HTML (the Vite preview). */
-function prepare(root: HTMLElement) {
-  root.dataset.phase = 'loading';
-  if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) root.dataset.mode = 'build';
+function prepare(flag: HTMLElement) {
+  if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) flag.dataset.mode = 'build';
 }
+
+const between = (min: number, max: number) => min + Math.random() * (max - min);
 
 /** Builds each target the first time it scrolls into view. Returns a function that stops it. */
 function startBuilder(stage: HTMLElement) {
-  stage.style.setProperty('--build-draw', `${DRAW_MS}ms`);
-  stage.style.setProperty('--build-sweep', `${SWEEP_MS}ms`);
-  const dock = stage.querySelector<HTMLElement>('.build-dock');
   const timers = new Set<number>();
   const later = (delay: number, task: () => void) => {
     const id = window.setTimeout(() => { timers.delete(id); task(); }, delay);
@@ -66,12 +66,12 @@ function startBuilder(stage: HTMLElement) {
     const [cursorX, cursorY, outline, size, tag, guideH, guideV, caret] =
       ['cursor-x', 'cursor-y', 'outline', 'size', 'tag', 'guide-h', 'guide-v', 'caret'].map(part);
     if (!cursorX || !cursorY || !outline || !size || !tag || !guideH || !guideV || !caret) return [];
-    return [{ peer, cursorX, cursorY, outline, size, tag, guideH, guideV, caret, busy: false, visible: false, y: 0, idle: 0 }];
+    return [{ peer, cursorX, cursorY, outline, size, tag, guideH, guideV, caret, busy: false, visible: false, x: 0, y: 0, idle: 0 }];
   });
   type Worker = typeof workers[number];
+  const pending: { target: Element; since: number }[] = [];
   let nextWorker = 0, lastStart = 0;
 
-  const setTool = (tool: string) => { if (dock) dock.dataset.tool = tool; };
   const px = (value: number) => `${Math.round(value)}px`;
   // X and Y travel on separate elements with different easings, which bends
   // the path into a natural arc instead of a straight line.
@@ -79,6 +79,7 @@ function startBuilder(stage: HTMLElement) {
     worker.cursorX.style.transitionDuration = worker.cursorY.style.transitionDuration = `${duration}ms`;
     worker.cursorX.style.transform = `translate3d(${px(Math.max(4, Math.min(stage.clientWidth - CURSOR_ROOM_PX, x)))}, 0, 0)`;
     worker.cursorY.style.transform = `translate3d(0, ${px(Math.max(4, y))}, 0)`;
+    worker.x = x;
     worker.y = y;
   };
   // Alignment guides that snap from a block's top-left to its bottom-right while it is drawn.
@@ -88,11 +89,21 @@ function startBuilder(stage: HTMLElement) {
   };
   const showTarget = (target: Element, text: boolean, duration: number) => {
     target.setAttribute('data-built', '');
-    if (!target.animate) return;
+    if (!target.animate || duration <= 0) return;
     const frames = text
       ? [{ clipPath: 'inset(-6px 100% -6px -6px)', opacity: 1 }, { clipPath: 'inset(-6px -6px -6px -6px)', opacity: 1 }]
-      : [{ opacity: 0, transform: 'translateY(14px)' }, { opacity: 1, transform: 'translateY(0)' }];
+      : [{ opacity: 0, transform: 'translateY(16px) scale(.985)' }, { opacity: 1, transform: 'translateY(0) scale(1)' }];
     target.animate(frames, { duration, easing: text ? 'cubic-bezier(.45, 0, .25, 1)' : 'cubic-bezier(.22, 1, .36, 1)', fill: 'backwards' });
+  };
+
+  // An idle collaborator keeps looking around the page before leaving.
+  const wander = (worker: Worker, step: number) => {
+    if (worker.busy) return;
+    if (step >= WANDER_STEPS) { worker.peer.removeAttribute('data-active'); worker.visible = false; return; }
+    // Stage coordinates: the stage spans the page, so its top edge is the page top.
+    const viewportTop = -stage.getBoundingClientRect().top;
+    moveCursor(worker, between(.08, .9) * stage.clientWidth, viewportTop + between(.15, .85) * window.innerHeight, WANDER_MS);
+    worker.idle = later(WANDER_MS + 300, () => wander(worker, step + 1));
   };
 
   const run = (worker: Worker, target: Element) => {
@@ -102,21 +113,28 @@ function startBuilder(stage: HTMLElement) {
     const right = left + rect.width, bottom = top + rect.height;
     const kind = target.getAttribute('data-build') || 'frame';
     const text = TEXT_KINDS.has(kind);
+    const pace = Math.max(MIN_PACE, 1 - Math.max(0, pending.length - workers.length) * .04);
+    const scaled = (ms: number) => Math.round(ms * pace);
+    const drawMs = scaled(Math.max(750, Math.min(1400, 500 + Math.hypot(rect.width, rect.height) * .9)));
+    const sweepMs = scaled(SWEEP_MS), revealMs = scaled(REVEAL_MS);
     const { outline, caret } = worker;
     window.clearTimeout(worker.idle);
     if (!worker.visible || Math.abs(worker.y - top) > window.innerHeight) {
       // Enter from just outside the block instead of crossing the whole page.
-      moveCursor(worker, right + 70, top + Math.min(rect.height, 180) + 80, 0);
+      moveCursor(worker, right + 90, top + Math.min(rect.height, 200) + 100, 0);
       void worker.cursorX.offsetWidth;
       worker.peer.setAttribute('data-active', '');
       worker.visible = true;
     }
-    setTool('move');
-    moveCursor(worker, left, top, TRAVEL_MS);
+    // Longer trips take longer, so neighbouring blocks follow each other quickly.
+    const travelMs = scaled(Math.max(MIN_TRAVEL_MS, Math.min(MAX_TRAVEL_MS, 600 + Math.hypot(worker.x - left, worker.y - top) * .45)));
+    const adjustMs = ADJUSTABLE_KINDS.has(kind) ? scaled(ADJUST_MS) : 0;
+    const settleMs = Math.round(adjustMs * .45);
+    moveCursor(worker, left, top, travelMs);
 
-    const drawAt = TRAVEL_MS, sizedAt = drawAt + DRAW_MS, doneAt = sizedAt + (text ? SWEEP_MS : REVEAL_MS);
-    later(drawAt, () => {
-      setTool(text ? 'text' : 'frame');
+    const sizedAt = travelMs + drawMs, shownAt = sizedAt + (text ? sweepMs : revealMs), adjustedAt = shownAt + adjustMs;
+    later(travelMs, () => {
+      outline.style.setProperty('--build-draw', `${drawMs}ms`);
       worker.guideH.style.transitionDuration = worker.guideV.style.transitionDuration = '0s';
       placeGuides(worker, left, top);
       void worker.guideH.offsetWidth;
@@ -132,7 +150,7 @@ function startBuilder(stage: HTMLElement) {
       outline.setAttribute('data-visible', '');
       outline.style.width = px(rect.width);
       outline.style.height = px(rect.height);
-      moveCursor(worker, right, bottom, DRAW_MS);
+      moveCursor(worker, right, bottom, drawMs);
       placeGuides(worker, right, bottom);
     });
     later(sizedAt, () => {
@@ -144,53 +162,79 @@ function startBuilder(stage: HTMLElement) {
         caret.style.height = px(Math.min(rect.height, 44));
         caret.style.transform = `translate3d(${px(left)}, ${px(top)}, 0)`;
         void caret.offsetWidth;
-        caret.style.transitionDuration = '';
+        caret.style.transitionDuration = `${sweepMs}ms`;
         caret.setAttribute('data-on', '');
         caret.style.transform = `translate3d(${px(right)}, ${px(top)}, 0)`;
-        moveCursor(worker, right + 20, top + Math.min(rect.height, 44) + 10, SWEEP_MS);
+        moveCursor(worker, right + 24, top + Math.min(rect.height, 44) + 14, sweepMs);
       }
-      showTarget(target, text, text ? SWEEP_MS : REVEAL_MS);
+      showTarget(target, text, text ? sweepMs : revealMs);
     });
-    later(doneAt, () => {
+    later(shownAt, () => {
       inProgress.delete(target);
       caret.removeAttribute('data-on');
       worker.guideH.removeAttribute('data-on'); worker.guideV.removeAttribute('data-on');
+      if (!adjustMs) return;
+      // Select the finished block and nudge it into place, then drop it back.
+      const dx = Math.round(between(10, 22)) * (Math.random() < .5 ? -1 : 1), dy = Math.round(between(6, 14)) * (Math.random() < .5 ? -1 : 1);
+      moveCursor(worker, right - 6, bottom - 6, settleMs);
+      later(settleMs, () => {
+        outline.style.transform = `translate3d(${px(left + dx)}, ${px(top + dy)}, 0)`;
+        moveCursor(worker, right - 6 + dx, bottom - 6 + dy, settleMs);
+      });
+      later(adjustMs - settleMs, () => {
+        outline.style.transform = `translate3d(${px(left)}, ${px(top)}, 0)`;
+        moveCursor(worker, right - 6, bottom - 6, settleMs);
+      });
     });
-    later(doneAt + HOLD_MS, () => {
+    later(adjustedAt, () => {
       outline.removeAttribute('data-visible');
-      worker.busy = false;
-      worker.idle = later(IDLE_MS, () => { worker.peer.removeAttribute('data-active'); worker.visible = false; });
+      later(HOLD_MS, () => {
+        worker.busy = false;
+        worker.idle = later(0, () => { wander(worker, 0); });
+        pump();
+      });
     });
   };
 
-  const build = (target: Element) => {
-    let worker: Worker | undefined;
-    for (let offset = 0; offset < workers.length && !worker; offset++) {
-      const candidate = workers[(nextWorker + offset) % workers.length];
-      if (!candidate.busy) { worker = candidate; nextWorker = (nextWorker + offset + 1) % workers.length; }
-    }
-    // Everyone is busy (a fast scroll): show the block without waiting.
-    if (!worker) { showTarget(target, false, REVEAL_MS); return; }
-    const assigned = worker;
-    assigned.busy = true;
-    inProgress.add(target);
-    const delay = Math.max(0, lastStart + STAGGER_MS - performance.now());
-    lastStart = performance.now() + delay;
-    later(delay, () => run(assigned, target));
+  const offscreen = (target: Element) => {
+    const rect = target.getBoundingClientRect();
+    return rect.bottom < 0 || rect.top > window.innerHeight;
   };
+  // Hands waiting blocks to free cursors, in the order they appeared.
+  function pump() {
+    while (pending.length) {
+      let worker: Worker | undefined;
+      for (let offset = 0; offset < workers.length && !worker; offset++) {
+        const candidate = workers[(nextWorker + offset) % workers.length];
+        if (!candidate.busy) { worker = candidate; nextWorker = (nextWorker + offset + 1) % workers.length; }
+      }
+      if (!worker) return;
+      const { target, since } = pending.shift()!;
+      // A block the visitor already scrolled past, or that waited too long, is just shown.
+      if (offscreen(target) || performance.now() - since > QUEUE_LIMIT_MS) { showTarget(target, false, 0); continue; }
+      const assigned = worker;
+      assigned.busy = true;
+      inProgress.add(target);
+      const delay = Math.max(0, lastStart + STAGGER_MS - performance.now());
+      lastStart = performance.now() + delay;
+      later(delay, () => run(assigned, target));
+    }
+  }
 
   const observer = new IntersectionObserver(entries => {
     for (const entry of entries) {
       if (!entry.isIntersecting) continue;
       observer.unobserve(entry.target);
-      build(entry.target);
+      pending.push({ target: entry.target, since: performance.now() });
     }
-  }, { threshold: .15, rootMargin: '0px 0px -6% 0px' });
+    pump();
+  }, { threshold: .1, rootMargin: '0px 0px -4% 0px' });
   document.querySelectorAll('[data-build]').forEach(target => observer.observe(target));
 
   return () => {
     observer.disconnect();
     timers.forEach(timer => window.clearTimeout(timer));
+    pending.forEach(({ target }) => target.setAttribute('data-built', ''));
     inProgress.forEach(target => target.setAttribute('data-built', ''));
     stage.querySelectorAll('[data-active], [data-visible], [data-on]').forEach(node => {
       node.removeAttribute('data-active'); node.removeAttribute('data-visible'); node.removeAttribute('data-on');
@@ -199,66 +243,26 @@ function startBuilder(stage: HTMLElement) {
 }
 
 export function IntroExperience() {
-  const rootRef = useRef<HTMLDivElement>(null);
+  const flagRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const root = rootRef.current, stage = stageRef.current;
-    if (!root || !stage) return;
-    if (!root.dataset.boot) { root.dataset.boot = '1'; prepare(root); }
-    root.dataset.ready = '1';
-
-    const timers: number[] = [];
-    const later = (delay: number, task: () => void) => { timers.push(window.setTimeout(task, delay)); };
-    let stopBuilder = () => {};
-    const build = () => {
-      if (root.dataset.mode) stopBuilder = startBuilder(stage);
-    };
-    const blockScroll = (event: Event) => event.preventDefault();
-    const releaseScroll = () => {
-      for (const type of SCROLL_EVENTS) window.removeEventListener(type, blockScroll);
-    };
-    const leave = () => {
-      root.dataset.phase = 'leaving';
-      releaseScroll();
-      later(LOADER_EXIT_MS / 2, build);
-      later(LOADER_EXIT_MS, () => { root.dataset.phase = 'done'; });
-    };
-    // The minimum counts from navigation start, so a slow page load adds no extra wait.
-    const reveal = () => later(Math.max(0, LOADER_MIN_MS - performance.now()), leave);
-
-    // iOS Safari can still pan a page whose root has overflow hidden.
-    for (const type of SCROLL_EVENTS) window.addEventListener(type, blockScroll, { passive: false });
-    if (document.readyState === 'complete') reveal();
-    else window.addEventListener('load', reveal, { once: true });
-
+    const flag = flagRef.current, stage = stageRef.current;
+    if (!flag || !stage) return;
+    if (!flag.dataset.boot) { flag.dataset.boot = '1'; prepare(flag); }
+    flag.dataset.ready = '1';
+    if (!flag.dataset.mode) return;
+    const stop = startBuilder(stage);
     return () => {
-      timers.forEach(timer => window.clearTimeout(timer));
-      window.removeEventListener('load', reveal);
-      releaseScroll();
-      stopBuilder();
-      if (root.dataset.phase === 'leaving') root.dataset.phase = 'done';
+      stop();
+      // Leaving the page must never leave blocks hidden.
+      delete flag.dataset.mode;
     };
   }, []);
 
   return (
     <>
-      <div ref={rootRef} id={ROOT_ID} className="intro" aria-hidden="true" suppressHydrationWarning>
-        <div className="intro-loader">
-          <div className="intro-loader-body">
-            <div className="intro-brand">
-              <img src="/brand/stane-mark.svg" width="36" height="36" alt="" />
-              <span>Stane<span className="intro-brand-period">.</span></span>
-            </div>
-            <div className="intro-progress"><span /></div>
-            <p className="intro-status">
-              <span>Initializing secure environment…</span>
-              <span>Preparing workspace…</span>
-              <span>Loading infrastructure…</span>
-            </p>
-          </div>
-        </div>
-      </div>
+      <div ref={flagRef} id={FLAG_ID} className="build-flag" hidden suppressHydrationWarning />
       <script dangerouslySetInnerHTML={{ __html: bootScript }} />
       <div ref={stageRef} className="build-stage" aria-hidden="true">
         {Array.from({ length: PEERS }, (_, index) => (
@@ -279,22 +283,6 @@ export function IntroExperience() {
             </div>
           </div>
         ))}
-        <div className="build-dock" data-tool="move">
-          <span className="build-tool" data-tool="move">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round"><path d="M5 3 19 11 12.4 12.8 9.5 19.5 5 3Z" /></svg>
-          </span>
-          <span className="build-tool" data-tool="frame">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"><path d="M7 3v18M17 3v18M3 7h18M3 17h18" /></svg>
-          </span>
-          <span className="build-tool" data-tool="text">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"><path d="M5 6V4h14v2M12 4v16M9 20h6" /></svg>
-          </span>
-          <span className="build-dock-divider" />
-          <span className="build-presence">
-            {Array.from({ length: PEERS }, (_, index) => <span key={index} style={{ background: `var(--build-peer-${index + 1})` }} />)}
-          </span>
-          <span className="build-live">Live</span>
-        </div>
       </div>
     </>
   );
