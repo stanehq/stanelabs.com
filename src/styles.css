@@ -4,7 +4,7 @@
   --background: #F7F9FC;
   --foreground: #111827;
   --muted: #464A53;
-  --primary: #5d8fce;
+  --primary: #3b7bdd;
   --accent: var(--primary);
   --primary-text: var(--primary);
   --primary-text-tinted: var(--primary);
@@ -79,8 +79,6 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
 .hero-shell { background: var(--background); }
 .hero { display: grid; grid-template-columns: 1fr 1fr; align-items: center; min-height: 468px; padding-block: 24px; }
 .hero-copy { position: relative; z-index: 2; }
-.eyebrow { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; color: var(--muted); font-size: 14px; line-height: 1.5; }
-.eyebrow-dot { width: 5px; height: 5px; background: var(--primary); border-radius: 50%; flex-shrink: 0; }
 .hero-title { font-size: clamp(48px, 4.7vw, 62px); line-height: 1.04; animation: hero-enter 1s var(--ease-studio) both; }
 .hero-title > span { display: block; } .hero-title-accent { color: var(--primary-text); }
 .hero-description { margin-top: 20px; color: var(--muted); font-size: 16px; line-height: 1.7; }
@@ -146,7 +144,7 @@ input::placeholder, textarea::placeholder { color: var(--muted); opacity: 1; } t
 .legal-header { margin-top: 32px; padding-bottom: 40px; border-bottom: 1px solid var(--border); } .legal-header h1 { margin-top: 20px; font-size: 36px; } .legal-header > p:not(.section-label) { margin-top: 20px; color: var(--muted); line-height: 1.8; } .legal-meta { display: block; margin-top: 16px; color: var(--muted); font-size: 14px; }
 .legal-section { padding-top: 32px; } .legal-section h2 { font-size: 23px; margin-bottom: 16px; } .legal-section p { color: var(--muted); line-height: 1.85; } .legal-section p + p { margin-top: 16px; }
 /* The scrollbar returns while the loader still covers the page, so nothing visibly shifts. */
-/* Entry experience: blocks stay hidden until a collaborator's cursor builds them (IntroExperience.tsx). */
+/* Entry experience: blocks stay hidden until a collaborator's cursor builds them (LiveBuild.tsx). */
 html:has(.build-flag[data-mode="build"]) [data-build]:not([data-built]) { opacity: 0 !important; }
 .build-stage { position: absolute; inset: 0; z-index: 60; overflow: hidden; pointer-events: none; }
 .build-outline, .build-cursor-x, .build-caret, .build-guide-h, .build-guide-v { position: absolute; top: 0; left: 0; }
@@ -189,7 +187,7 @@ html:has(.build-flag[data-mode="build"]) [data-build]:not([data-built]) { opacit
   .container { width: calc(100% - 40px); } .header-inner { width: calc(100% - 24px); height: 56px; padding-inline: 16px; border-radius: 20px; }
   .contact-dropdown { right: 12px; }
   .desktop-nav { display: none; } .menu-button { display: inline-flex; align-items: center; justify-content: center; }
-  .hero { grid-template-columns: 1fr; padding-block: 28px 0; min-height: 0; } .hero-copy { max-width: 540px; } .hero-title { font-size: 50px; } .eyebrow { margin-bottom: 16px; } .hero-description { margin-top: 16px; } .hero-actions { margin-top: 20px; gap: 12px 16px; }
+  .hero { grid-template-columns: 1fr; padding-block: 28px 0; min-height: 0; } .hero-copy { max-width: 540px; } .hero-title { font-size: 50px; } .hero-description { margin-top: 16px; } .hero-actions { margin-top: 20px; gap: 12px 16px; }
   .hero-art { width: 100%; height: 240px; margin: 0; }
   .services-section { padding-block: 16px 24px; } .section-heading { margin-bottom: 20px; } .section-heading h2 { max-width: 460px; }
   .service-grid { grid-template-columns: 1fr; gap: 12px; } .service-card { padding: 18px 20px; border-radius: 20px; } .service-top { flex-wrap: nowrap; align-items: center; min-height: 40px; } .service-top > div { flex-basis: auto; } .service-icon { width: 36px; height: 36px; border-radius: 12px; } .service-context { font-size: 14px; } .service-card h3 { font-size: 20px; }
@@ -204,7 +202,7 @@ html:has(.build-flag[data-mode="build"]) [data-build]:not([data-built]) { opacit
   .header-inner { gap: 8px; padding-inline: 12px; }
   .header-end { gap: 8px; }
   .header-contact { padding-inline: 12px; gap: 6px; font-size: 13px; }
-  .hero-title { font-size: 48px; } .eyebrow { gap: 8px; font-size: 14px; } .hero-actions { align-items: start; flex-direction: column; }
+  .hero-title { font-size: 48px; } .hero-actions { align-items: start; flex-direction: column; }
   .hero-art { height: 220px; width: calc(100% + 40px); margin-inline: -20px; }
   .form-grid { grid-template-columns: 1fr; } .contact-panel { padding: 18px; } .contact-panel-heading h3 { font-size: 20px; }
   .legal-page { padding-block: 36px 48px; } .legal-header h1 { font-size: 28px; }

@@ -48,7 +48,7 @@ const questions: { question: string; answer: string; link?: { href: string; labe
 
 const stepNumber = (index: number) => `0${index + 1}`;
 
-// `data-build` marks the blocks that IntroExperience assembles on scroll; its value
+// `data-build` marks the blocks that LiveBuild assembles on scroll; its value
 // is the layer type shown in the editor tag (heading, text, button, image or frame).
 
 /** Keeps fragments from earlier versions of the page pointing at the current section. */
@@ -61,7 +61,6 @@ function Hero() {
     <section className="hero-shell" aria-labelledby="hero-heading">
       <div className="container hero">
         <div className="hero-copy">
-          <p className="eyebrow" data-build="text"><span className="eyebrow-dot" />ESTUDIO DE CIBERSEGURIDAD Y OPSEC</p>
           <h1 id="hero-heading" className="hero-title">
             <span data-build="heading">Tus datos.</span>
             <span data-build="heading">Tu identidad.</span>

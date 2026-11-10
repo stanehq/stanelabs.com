@@ -7,7 +7,7 @@ import '../src/styles.css';
 const headingFont = localFont({ src: '../src/fonts/tiktok-sans-latin.woff2', variable: '--font-tiktok', weight: '400 600', display: 'swap' });
 const bodyFont = localFont({ src: '../src/fonts/geist-latin.woff2', variable: '--font-geist', weight: '400 500', display: 'swap' });
 
-export const viewport: Viewport = { width: 'device-width', initialScale: 1, themeColor: '#5d8fce' };
+export const viewport: Viewport = { width: 'device-width', initialScale: 1, themeColor: '#3b7bdd' };
 
 const organizationId = `${config.siteUrl}/#organization`;
 const structuredData = {

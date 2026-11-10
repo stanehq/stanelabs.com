@@ -6,6 +6,8 @@ La portada utiliza una escultura WebGL azul satinada con oscilación, barrido de
 
 La portada recupera una estructura compacta con paneles translúcidos, bordes suaves y texto legible desde 14 px. Las tres especialidades están abiertas; metodología y entregables comparten un panel y las preguntas acompañan al contacto, sin pestañas ni respuestas colapsadas. El formulario y el email están visibles; los enlaces de cada especialidad preseleccionan el tema. Sin API de correo, el formulario prepara un borrador y ofrece un enlace explícito para abrirlo: no envía ni abre otra aplicación automáticamente. Sin JavaScript, la información y el correo siguen siendo visibles, y el formulario se deshabilita para evitar peticiones accidentales con datos personales.
 
+La portada se "construye" a la vista del visitante, como en un editor colaborativo: seis cursores dibujan marcos, escriben el texto y ajustan cada bloque marcado con `data-build` (`src/lib/live-build.ts`, `src/components/LiveBuild.tsx`). El ritmo depende del scroll: cuanto más rápido se desplaza el visitante, más rápido trabajan los cursores, y los bloques que ya ha dejado atrás se muestran de inmediato. Al terminar, los cursores se van. Con movimiento reducido o sin JavaScript no hay animación y todo el contenido es visible.
+
 El titular y la escultura entran en un segundo; el titular nunca parte de opacidad cero. El sitio declara únicamente español. El efecto de vidrio usa transparencias, degradados, bordes y sombras sin filtros de desenfoque para conservar la fluidez del 3D; respeta la preferencia de transparencia reducida con fondos blancos.
 
 ## Arquitectura
