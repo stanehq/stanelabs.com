@@ -20,7 +20,7 @@ La producción utiliza HTML, CSS y JavaScript estáticos de Next y el backend Ne
 
 ## Desarrollo y compilación
 
-Usar **Node.js 24.21.0** y **npm 11.19.0**, fijados en `.node-version` y `package.json`. Docker fija también el digest de esa versión. Desde la raíz:
+Usar **Node.js 24.22.2** y **npm 11.19.0**, fijados en `.node-version` y `package.json`. Docker fija también el digest de esa versión. Desde la raíz:
 
 ```sh
 npm ci --ignore-scripts

@@ -1,6 +1,6 @@
 # API NestJS de StaneLabs
 
-Backend separado, sin base de datos ni cola. No registra el cuerpo del contacto. Usa Node.js 24.21.0, fijado junto al runtime de producción.
+Backend separado, sin base de datos ni cola. No registra el cuerpo del contacto. Usa Node.js 24.22.2, fijado junto al runtime de producción.
 
 ## Preparación
 
