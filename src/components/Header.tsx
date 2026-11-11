@@ -11,7 +11,7 @@ import { Button } from './ui/button';
 
 /** Anchors of the homepage sections linked from the navigation. */
 const SECTION_IDS = ['servicios', 'enfoque', 'contacto'] as const;
-// Matches the contact fragment on the homepage of any language: #contacto, /#contacto, /en#contacto.
+// Matches the contact fragment on the homepage of any language: #contacto, /#contacto, /es#contacto.
 const contactLinkSelector = `a[href$="${CONTACT_HASH}"]`;
 
 function isPlainLeftClick(event: MouseEvent) {

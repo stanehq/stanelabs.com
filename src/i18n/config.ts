@@ -1,8 +1,8 @@
-/** Languages of the site. Spanish is the default and lives at the root of the domain. */
-export const LOCALES = ['es', 'en', 'fr'] as const;
+/** Languages of the site. English is the default and lives at the root of the domain. */
+export const LOCALES = ['en', 'es', 'fr'] as const;
 export type Locale = (typeof LOCALES)[number];
-export const DEFAULT_LOCALE: Locale = 'es';
-/** Languages served under their own prefix (`/en`, `/fr`). */
+export const DEFAULT_LOCALE: Locale = 'en';
+/** Languages served under their own prefix (`/es`, `/fr`). */
 export const PREFIXED_LOCALES = LOCALES.filter(locale => locale !== DEFAULT_LOCALE);
 
 /** Pages of the site, as paths in the default language. */
@@ -14,7 +14,7 @@ export const OPEN_GRAPH_LOCALES: Record<Locale, string> = { es: 'es_ES', en: 'en
 
 export const isLocale = (value: unknown): value is Locale => LOCALES.some(locale => locale === value);
 
-/** Path of a route in a language: `/privacy` stays as is in Spanish and becomes `/en/privacy` in English. */
+/** Path of a route in a language: `/privacy` stays as is in English and becomes `/es/privacy` in Spanish. */
 export function localePath(locale: Locale, route: string): string {
   if (locale === DEFAULT_LOCALE) return route;
   return route === '/' ? `/${locale}` : `/${locale}${route}`;

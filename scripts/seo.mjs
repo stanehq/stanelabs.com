@@ -11,7 +11,7 @@ for (const locale of LOCALES) {
   const { meta } = await readJson(`src/i18n/${locale}.json`);
   for (const route of ROUTES) definitions[localePath(locale, route)] = meta.pages[route];
 }
-const { socialImageAlt } = (await readJson('src/i18n/es.json')).meta;
+const { socialImageAlt } = (await readJson(`src/i18n/${DEFAULT_LOCALE}.json`)).meta;
 const productionUrl = new URL(config.siteUrl);
 if (productionUrl.protocol !== 'https:' || productionUrl.username || productionUrl.password || productionUrl.search || productionUrl.hash || !['', '/'].includes(productionUrl.pathname)) {
   throw new Error('project-config.json: siteUrl must be a clean HTTPS origin.');
@@ -35,7 +35,7 @@ function metadata(route, hasSocialImage) {
   if (email) organization.contactPoint = { '@type': 'ContactPoint', contactType: 'security', email, availableLanguage: ['es'] };
   const structuredData = {
     '@context': 'https://schema.org',
-    '@graph': [organization, { '@type': 'WebSite', '@id': `${origin}/#website`, name, url: `${origin}/`, inLanguage: 'es', publisher: { '@id': `${origin}/#organization` } }],
+    '@graph': [organization, { '@type': 'WebSite', '@id': `${origin}/#website`, name, url: `${origin}/`, inLanguage: DEFAULT_LOCALE, publisher: { '@id': `${origin}/#organization` } }],
   };
   const socialImage = hasSocialImage ? `\n    <meta property="og:image" content="${origin}/brand/social-card.png">\n    <meta property="og:image:alt" content="${escapeHtml(socialImageAlt)}">\n    <meta name="twitter:image" content="${origin}/brand/social-card.png">` : '';
   return `<!-- SEO:START -->
@@ -89,7 +89,7 @@ for (const size of [192, 512]) {
   if (await exists(path.join(root, 'public', filename))) icons.push({ src: `/${filename}`, sizes: `${size}x${size}`, type: 'image/png', purpose: 'any' });
 }
 if (!icons.length && await exists(path.join(root, 'public', 'brand', 'favicon.svg'))) icons.push({ src: '/brand/favicon.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'any' });
-const manifest = { id: '/', name, short_name: name, description: definitions['/'].description, lang: 'es', start_url: '/', scope: '/', display: 'standalone', background_color: '#FFFFFF', theme_color: '#3b7bdd', icons };
+const manifest = { id: '/', name, short_name: name, description: definitions['/'].description, lang: DEFAULT_LOCALE, start_url: '/', scope: '/', display: 'standalone', background_color: '#FFFFFF', theme_color: '#3b7bdd', icons };
 const contacts = email ? [`Contact: mailto:${email}`, `Contact: ${origin}/security`] : [`Contact: ${origin}/security`];
 const securityTxt = [`# ${name}: responsible vulnerability disclosure`, ...contacts, `Expires: ${expiry}`, `Preferred-Languages: es`, `Canonical: ${origin}/.well-known/security.txt`, `Policy: ${origin}/security`, ''].join('\n');
 // Every page lists its translations, so search engines can serve each visitor the right language.

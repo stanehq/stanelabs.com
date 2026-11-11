@@ -10,7 +10,7 @@ export function generateStaticParams() {
   return PREFIXED_LOCALES.map(lang => ({ lang }));
 }
 
-/** Root layout of the languages served under a prefix, such as `/en` and `/fr`. */
+/** Root layout of the languages served under a prefix, such as `/es` and `/fr`. */
 export default async function LocaleLayout({ children, params }: { children: ReactNode; params: Promise<{ lang: string }> }) {
   const { lang } = await params;
   return <RootDocument locale={isLocale(lang) ? lang : DEFAULT_LOCALE}>{children}</RootDocument>;

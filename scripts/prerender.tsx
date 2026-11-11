@@ -14,7 +14,7 @@ for (const locale of LOCALES) {
   for (const route of ROUTES) {
     const markup = renderToString(<React.StrictMode><App locale={locale} messages={messages} path={route} /></React.StrictMode>);
     const html = shell
-      .replace('<html lang="es">', `<html lang="${locale}">`)
+      .replace(/<html lang="[a-z]+">/, `<html lang="${locale}">`)
       .replace(/<title>[^<]*<\/title>/, `<title>${messages.meta.pages[route].title}</title>`)
       .replace('<div id="root"></div>', `<div id="root">${markup}</div>`);
     const url = localePath(locale, route);
