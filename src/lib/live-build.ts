@@ -39,7 +39,7 @@ const TIMING = {
   stagger: 380,
 };
 /** Lowest pace, reached when the visitor scrolls very fast; 1 is the normal pace. */
-const MIN_PACE = .35;
+const MIN_PACE = .3;
 /** Scrolling up to this speed (px per ms) leaves the pace untouched, so steady reading stays smooth. */
 const SCROLL_FREE_SPEED = .8;
 /** How strongly scroll speed above the free speed quickens the build: pace = 1 / (1 + excess * this). */
@@ -53,8 +53,17 @@ const IDLE_GAP_MS = 160;
 const FRAME_MS = 16;
 /** Half-life of the memory of a fast scroll. */
 const SCROLL_MEMORY_MS = 800;
-/** A block still waiting for a cursor after this long is shown directly. */
+/** Pace of the build once the visitor starts scrolling: blocks must appear about as fast as they come into view. */
+const SCROLL_BASE_PACE = .55;
+/** A block still waiting for a cursor after this long is shown directly; while scrolling, nobody waits long. */
 const QUEUE_LIMIT_MS = 18000;
+const SCROLL_QUEUE_LIMIT_MS = 1400;
+/** How often waiting blocks are checked against that limit. */
+const RECHECK_MS = 400;
+/** Blocks start building this share of the viewport height before they scroll into view. */
+const LOOKAHEAD = .12;
+/** How far alignment guides stick out past the block they mark. */
+const GUIDE_OVERSHOOT_PX = 28;
 /** Room kept to the right of a cursor so it stays on screen. */
 const CURSOR_ROOM_PX = 36;
 
@@ -74,7 +83,7 @@ const randomSign = () => (Math.random() < .5 ? -1 : 1);
  */
 function trackScrollSpeed() {
   let lastY = window.scrollY, lastTime = performance.now(), speed = 0;
-  let peak = 0, peakTime = lastTime;
+  let peak = 0, peakTime = lastTime, scrolled = false;
   const fade = (now: number) => .5 ** ((now - peakTime) / SCROLL_MEMORY_MS);
   const onScroll = () => {
     const now = performance.now();
@@ -85,10 +94,13 @@ function trackScrollSpeed() {
     lastTime = now;
     peak = Math.max(speed, peak * fade(now));
     peakTime = now;
+    scrolled = true;
   };
   window.addEventListener('scroll', onScroll, { passive: true });
   return {
     read: () => peak * fade(performance.now()),
+    /** True once the visitor has scrolled at all. */
+    hasScrolled: () => scrolled,
     stop: () => window.removeEventListener('scroll', onScroll),
   };
 }
@@ -117,9 +129,10 @@ function showTarget(target: Element, text: boolean, duration: number) {
   });
 }
 
+/** True once a block is above the viewport or too far below it to be worth building. */
 const isOffscreen = (target: Element) => {
   const { top, bottom } = target.getBoundingClientRect();
-  return bottom < 0 || top > window.innerHeight;
+  return bottom < 0 || top > window.innerHeight * (1 + LOOKAHEAD);
 };
 
 /** Starts the build on a stage element. Returns a function that stops it and shows everything. */
@@ -140,7 +153,8 @@ export function startLiveBuild(stage: HTMLElement): () => void {
     const excess = Math.max(0, scrollSpeed.read() - SCROLL_FREE_SPEED);
     const scrollPace = Math.max(MIN_PACE, 1 / (1 + excess * SCROLL_SENSITIVITY));
     const queuePace = Math.max(MIN_QUEUE_PACE, 1 - Math.max(0, pending.length - workers.length) * .04);
-    return Math.min(scrollPace, queuePace);
+    const base = scrollSpeed.hasScrolled() ? SCROLL_BASE_PACE : 1;
+    return Math.max(MIN_PACE, base * Math.min(scrollPace, queuePace));
   };
 
   // X and Y travel on separate elements with different easings, which bends
@@ -160,9 +174,10 @@ export function startLiveBuild(stage: HTMLElement): () => void {
     elements.forEach(element => { element.style.transitionDuration = ''; });
   };
   // Alignment guides snap from a block's top-left to its bottom-right while it is drawn.
-  const placeGuides = (worker: Worker, x: number, y: number) => {
-    worker.guideH.style.transform = `translate3d(0, ${px(y)}, 0)`;
-    worker.guideV.style.transform = `translate3d(${px(x)}, 0, 0)`;
+  // They only reach a little past the block, so they never cross the whole page.
+  const placeGuides = (worker: Worker, box: Rect, x: number, y: number) => {
+    worker.guideH.style.transform = `translate3d(${px(box.left - GUIDE_OVERSHOOT_PX)}, ${px(y)}, 0)`;
+    worker.guideV.style.transform = `translate3d(${px(x)}, ${px(box.top - GUIDE_OVERSHOOT_PX)}, 0)`;
   };
   const setGuides = (worker: Worker, on: boolean) => {
     for (const guide of [worker.guideH, worker.guideV]) guide.toggleAttribute('data-on', on);
@@ -170,7 +185,11 @@ export function startLiveBuild(stage: HTMLElement): () => void {
 
   const drawFrame = (worker: Worker, kind: string, box: Rect, duration: number) => {
     const { outline } = worker;
-    jump([worker.guideH, worker.guideV], () => placeGuides(worker, box.left, box.top));
+    jump([worker.guideH, worker.guideV], () => {
+      worker.guideH.style.width = px(box.width + GUIDE_OVERSHOOT_PX * 2);
+      worker.guideV.style.height = px(box.height + GUIDE_OVERSHOOT_PX * 2);
+      placeGuides(worker, box, box.left, box.top);
+    });
     setGuides(worker, true);
     jump([outline], () => {
       outline.style.transform = `translate3d(${px(box.left)}, ${px(box.top)}, 0)`;
@@ -183,7 +202,7 @@ export function startLiveBuild(stage: HTMLElement): () => void {
     outline.style.width = px(box.width);
     outline.style.height = px(box.height);
     moveCursor(worker, box.right, box.bottom, duration);
-    placeGuides(worker, box.right, box.bottom);
+    placeGuides(worker, box, box.right, box.bottom);
   };
 
   /** A text cursor sweeps across the block while its text is typed in. */
@@ -214,10 +233,17 @@ export function startLiveBuild(stage: HTMLElement): () => void {
     later(duration - settle, () => { place(0, 0); corner(0, 0, settle); });
   };
 
+  /** Once the header is built, the stage sits under it so outlines never cover the navigation. */
+  const syncStackOrder = () => {
+    const unbuilt = Array.from(document.querySelectorAll('.site-header [data-build]:not([data-built])'));
+    stage.toggleAttribute('data-under-header', !unbuilt.some(block => block.getClientRects().length));
+  };
+
   const finish = (worker: Worker, target: Element) => {
     worker.outline.removeAttribute('data-visible');
     later(TIMING.hold, () => {
       inProgress.delete(target);
+      syncStackOrder();
       worker.busy = false;
       pump();
       // With nothing left to build, the cursor leaves.
@@ -276,18 +302,27 @@ export function startLiveBuild(stage: HTMLElement): () => void {
   };
 
   /** Hands waiting blocks to free cursors, in the order they appeared. */
+  let rechecking = false;
   function pump() {
     while (pending.length) {
       const free = workers.map((_, offset) => workers[(nextWorker + offset) % workers.length]).find(worker => !worker.busy);
       const [{ target, since }] = pending;
-      const tooLate = isOffscreen(target) || performance.now() - since > QUEUE_LIMIT_MS;
-      // Flinging past, or a block already passed: just show it.
-      if (tooLate || (!free && scrollSpeed.read() >= FLING_SPEED)) {
+      const waited = performance.now() - since;
+      const limit = scrollSpeed.hasScrolled() ? SCROLL_QUEUE_LIMIT_MS : QUEUE_LIMIT_MS;
+      const passed = isOffscreen(target);
+      // Flinging past, or a block that already left the screen: just show it, without ceremony.
+      if (passed || (!free && scrollSpeed.read() >= FLING_SPEED)) {
         pending.shift();
-        showTarget(target, false, tooLate ? 0 : Math.round(TIMING.reveal * MIN_PACE));
+        showTarget(target, false, 0);
         continue;
       }
-      if (!free) return;
+      // Waited too long for a cursor: fade it in rather than leave a hole in the page.
+      if (!free && waited > limit) {
+        pending.shift();
+        showTarget(target, false, Math.round(TIMING.reveal * MIN_PACE));
+        continue;
+      }
+      if (!free) break;
       pending.shift();
       nextWorker = (workers.indexOf(free) + 1) % workers.length;
       free.busy = true;
@@ -295,6 +330,11 @@ export function startLiveBuild(stage: HTMLElement): () => void {
       const delay = Math.max(0, lastStart + TIMING.stagger * currentPace() - performance.now());
       lastStart = performance.now() + delay;
       later(delay, () => run(free, target));
+    }
+    // Blocks still waiting are checked again soon, so none stays hidden past the limit.
+    if (pending.length && !rechecking) {
+      rechecking = true;
+      later(RECHECK_MS, () => { rechecking = false; pump(); });
     }
   }
 
@@ -305,7 +345,7 @@ export function startLiveBuild(stage: HTMLElement): () => void {
       pending.push({ target: entry.target, since: performance.now() });
     }
     pump();
-  }, { threshold: .1, rootMargin: '0px 0px -4% 0px' });
+  }, { rootMargin: `0px 0px ${LOOKAHEAD * 100}% 0px` });
   document.querySelectorAll('[data-build]').forEach(target => observer.observe(target));
 
   return () => {

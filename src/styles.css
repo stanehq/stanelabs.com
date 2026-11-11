@@ -157,6 +157,8 @@ input::placeholder, textarea::placeholder { color: var(--muted); opacity: 1; } t
 /* Entry experience: blocks stay hidden until a collaborator's cursor builds them (LiveBuild.tsx). */
 html:has(.build-flag[data-mode="build"]) [data-build]:not([data-built]) { opacity: 0 !important; }
 .build-stage { position: absolute; inset: 0; z-index: 60; overflow: hidden; pointer-events: none; }
+/* Once the header is built the stage drops below it (see syncStackOrder in live-build.ts). */
+.build-stage[data-under-header] { z-index: 40; }
 .build-outline, .build-cursor-x, .build-caret, .build-guide-h, .build-guide-v { position: absolute; top: 0; left: 0; }
 .build-outline { border: 1.5px solid var(--peer); border-radius: 2px; background: color-mix(in srgb, var(--peer) 6%, transparent); opacity: 0; transition: opacity 260ms ease, transform 550ms var(--ease-studio), width var(--build-draw, 1000ms) var(--ease-studio), height var(--build-draw, 1000ms) var(--ease-studio); }
 .build-outline[data-visible] { opacity: 1; }
@@ -167,8 +169,8 @@ html:has(.build-flag[data-mode="build"]) [data-build]:not([data-built]) { opacit
 .build-size { top: calc(100% + 8px); left: 50%; padding: 2px 6px; color: white; background: var(--peer); border-radius: 4px; opacity: 0; transform: translateX(-50%); transition: opacity 200ms ease; }
 .build-outline[data-sized] .build-size { opacity: 1; }
 .build-guide-h, .build-guide-v { background: var(--peer); opacity: 0; transition: opacity 240ms ease, transform 420ms var(--ease-studio); }
-.build-guide-h { width: 100%; height: 1px; } .build-guide-v { width: 1px; height: 100%; }
-.build-guide-h[data-on], .build-guide-v[data-on] { opacity: .55; }
+.build-guide-h { width: 0; height: 1px; } .build-guide-v { width: 1px; height: 0; }
+.build-guide-h[data-on], .build-guide-v[data-on] { opacity: .45; }
 .build-caret { width: 2px; background: var(--peer); opacity: 0; transition: transform 1500ms cubic-bezier(.45, 0, .25, 1); }
 .build-caret[data-on] { opacity: 1; animation: build-blink 900ms steps(1) infinite; }
 .build-cursor-x { transition: transform 950ms cubic-bezier(.45, 0, .25, 1); }
