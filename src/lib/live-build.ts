@@ -39,18 +39,20 @@ const TIMING = {
   stagger: 380,
 };
 /** Lowest pace, reached when the visitor scrolls very fast; 1 is the normal pace. */
-const MIN_PACE = .18;
-/** Below this pace there is no time for cursors: waiting blocks are just shown. */
-const FAST_PACE = .3;
+const MIN_PACE = .35;
+/** Scrolling up to this speed (px per ms) leaves the pace untouched, so steady reading stays smooth. */
+const SCROLL_FREE_SPEED = .8;
+/** How strongly scroll speed above the free speed quickens the build: pace = 1 / (1 + excess * this). */
+const SCROLL_SENSITIVITY = .35;
+/** A fling this fast (px per ms) leaves no time for cursors: waiting blocks are just shown. */
+const FLING_SPEED = 6;
 /** How much a long queue of waiting blocks speeds the cursors up, at most. */
-const MIN_QUEUE_PACE = .6;
-/** How strongly scroll speed (px per ms) slows the build down: pace = 1 / (1 + speed * this). */
-const SCROLL_SENSITIVITY = 2;
+const MIN_QUEUE_PACE = .7;
 /** Pause after which a scroll event starts a new gesture. */
 const IDLE_GAP_MS = 160;
 const FRAME_MS = 16;
 /** Half-life of the memory of a fast scroll. */
-const SCROLL_MEMORY_MS = 1500;
+const SCROLL_MEMORY_MS = 800;
 /** A block still waiting for a cursor after this long is shown directly. */
 const QUEUE_LIMIT_MS = 18000;
 /** Room kept to the right of a cursor so it stays on screen. */
@@ -135,7 +137,8 @@ export function startLiveBuild(stage: HTMLElement): () => void {
 
   /** 1 at rest; lower (faster cursors) while scrolling fast or while many blocks are waiting. */
   const currentPace = () => {
-    const scrollPace = Math.max(MIN_PACE, 1 / (1 + scrollSpeed.read() * SCROLL_SENSITIVITY));
+    const excess = Math.max(0, scrollSpeed.read() - SCROLL_FREE_SPEED);
+    const scrollPace = Math.max(MIN_PACE, 1 / (1 + excess * SCROLL_SENSITIVITY));
     const queuePace = Math.max(MIN_QUEUE_PACE, 1 - Math.max(0, pending.length - workers.length) * .04);
     return Math.min(scrollPace, queuePace);
   };
@@ -278,8 +281,8 @@ export function startLiveBuild(stage: HTMLElement): () => void {
       const free = workers.map((_, offset) => workers[(nextWorker + offset) % workers.length]).find(worker => !worker.busy);
       const [{ target, since }] = pending;
       const tooLate = isOffscreen(target) || performance.now() - since > QUEUE_LIMIT_MS;
-      // Scrolling too fast for cursors, or a block already passed: just show it.
-      if (tooLate || (!free && currentPace() <= FAST_PACE)) {
+      // Flinging past, or a block already passed: just show it.
+      if (tooLate || (!free && scrollSpeed.read() >= FLING_SPEED)) {
         pending.shift();
         showTarget(target, false, tooLate ? 0 : Math.round(TIMING.reveal * MIN_PACE));
         continue;
