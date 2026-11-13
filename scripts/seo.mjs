@@ -11,7 +11,6 @@ for (const locale of LOCALES) {
   const { meta } = await readJson(`src/i18n/${locale}.json`);
   for (const route of ROUTES) definitions[localePath(locale, route)] = meta.pages[route];
 }
-const { socialImageAlt } = (await readJson(`src/i18n/${DEFAULT_LOCALE}.json`)).meta;
 const productionUrl = new URL(config.siteUrl);
 if (productionUrl.protocol !== 'https:' || productionUrl.username || productionUrl.password || productionUrl.search || productionUrl.hash || !['', '/'].includes(productionUrl.pathname)) {
   throw new Error('project-config.json: siteUrl must be a clean HTTPS origin.');
@@ -28,7 +27,7 @@ if (email && (!/^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+$/.test(email) || /[\r\n]/.test(e
 const exists = async (filename) => access(filename).then(() => true, () => false);
 const escapeHtml = (value) => String(value).replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char]);
 
-function metadata(route, hasSocialImage) {
+function metadata(route) {
   const page = definitions[route] || definitions['/'];
   const canonical = `${origin}${route === '/' ? '/' : route}`;
   const organization = { '@type': 'Organization', '@id': `${origin}/#organization`, name, url: `${origin}/` };
@@ -37,7 +36,6 @@ function metadata(route, hasSocialImage) {
     '@context': 'https://schema.org',
     '@graph': [organization, { '@type': 'WebSite', '@id': `${origin}/#website`, name, url: `${origin}/`, inLanguage: DEFAULT_LOCALE, publisher: { '@id': `${origin}/#organization` } }],
   };
-  const socialImage = hasSocialImage ? `\n    <meta property="og:image" content="${origin}/brand/social-card.png">\n    <meta property="og:image:alt" content="${escapeHtml(socialImageAlt)}">\n    <meta name="twitter:image" content="${origin}/brand/social-card.png">` : '';
   return `<!-- SEO:START -->
     <title>${escapeHtml(page.title)}</title>
     <meta name="description" content="${escapeHtml(page.description)}">
@@ -49,9 +47,9 @@ function metadata(route, hasSocialImage) {
     <meta property="og:url" content="${escapeHtml(canonical)}">
     <meta property="og:title" content="${escapeHtml(page.title)}">
     <meta property="og:description" content="${escapeHtml(page.description)}">
-    <meta name="twitter:card" content="${hasSocialImage ? 'summary_large_image' : 'summary'}">
+    <meta name="twitter:card" content="summary">
     <meta name="twitter:title" content="${escapeHtml(page.title)}">
-    <meta name="twitter:description" content="${escapeHtml(page.description)}">${socialImage}
+    <meta name="twitter:description" content="${escapeHtml(page.description)}">
     <script type="application/ld+json">${JSON.stringify(structuredData).replace(/</g, '\\u003c')}</script>
     <!-- SEO:END -->`;
 }
@@ -70,13 +68,12 @@ if (distBuild && !(await exists(path.join(output, 'index.html')))) throw new Err
 await mkdir(path.join(output, '.well-known'), { recursive: true });
 const files = distBuild ? await htmlFiles(output) : [path.join(root, 'index.html')];
 const routes = [];
-const hasSocialImage = await exists(path.join(output, 'brand', 'social-card.png'));
 for (const filename of files) {
   const relative = path.relative(distBuild ? output : root, filename).replaceAll('\\', '/');
   const route = relative === 'index.html' ? '/' : `/${relative.replace(/\/index\.html$/, '').replace(/\.html$/, '')}`;
   const html = await readFile(filename, 'utf8');
   if (/<!-- SEO:START -->[\s\S]*?<!-- SEO:END -->/.test(html)) {
-    await writeFile(filename, html.replace(/<!-- SEO:START -->[\s\S]*?<!-- SEO:END -->/, metadata(route, hasSocialImage)), 'utf8');
+    await writeFile(filename, html.replace(/<!-- SEO:START -->[\s\S]*?<!-- SEO:END -->/, metadata(route)), 'utf8');
   } else if (!distBuild || !html.includes('self.__next_f')) {
     throw new Error(`SEO markers missing in ${relative}.`);
   }
